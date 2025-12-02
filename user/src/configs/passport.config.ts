@@ -8,10 +8,8 @@ passport.use(
       clientSecret : process.env.GOOGLE_SECRET,
       callbackURL: process.env.GOOGLE_CALLBACK_URL
     },
-    function (accessToken, refreshToken, profile, cb) {
-      User.findOrCreate({ googleId: profile.id }, function (err, user) {
-        return cb(err, user);
-      });
-    },
+    async function (accessToken, refreshToken, profile, done) {
+      
+    }
   ),
 );
