@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import {
   generateAccessToken,
@@ -11,22 +10,19 @@ import {
   loginUserSchema,
   registerUserSchema,
 } from "../validation/user.validation.js";
-import { PrismaClient } from "@prisma/client";
+import { setCookies } from "../utils/cookie.utils.js";
 
-// LOGIN USER CONTROLLER
+// LOGIN
 export const loginUserController = asyncHandler(
   async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     const parsed = loginUserSchema.parse({ email, password });
 
-    let user = await prisma.user.findUnique({
-      where: {
-        email,
-      },
-    });
-
+    const user = await prisma.user.findUnique({ where: { email } });
     if (!user) throw new Error("User not found");
+
+    if (!user.password) throw new Error("User has no password");
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) throw new Error("Invalid password");
@@ -34,85 +30,65 @@ export const loginUserController = asyncHandler(
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
 
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 1000 * 60 * 15, // 15 minutes
-    });
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 24 * 30,
-    });
+    setCookies(res, accessToken, refreshToken)
 
     res.status(200).json({
       message: "Login successful",
       user,
     });
-  },
+  }
 );
 
-// REGISTER USER CONTROLLER
-export const registerUserController = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
-  registerUserSchema.parse({ name, email, password });
+// REGISTER
+export const registerUserController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { name, email, password } = req.body;
+    registerUserSchema.parse({ name, email, password });
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  const user = await prisma.$transaction(async (tx: PrismaClient) => {
-    const createdUser = await tx.user.create({
-      data: { name, email, password: hashedPassword },
+    const user = await prisma.$transaction(async (tx) => {
+      const createdUser = await tx.user.create({
+        data: { name, email, password: hashedPassword },
+      });
+
+      await tx.account.create({
+        data: {
+          provider: "EMAIL",
+          userId: createdUser.id,
+        },
+      });
+
+      return createdUser;
     });
 
-    await tx.account.create({
-      data: {
-        user: { connect: { id: createdUser.id } },
-        provider: "EMAIL",
-      },
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+
+    setCookies(res, accessToken, refreshToken)
+
+    res.status(200).json({
+      message: "Account Successfully Registered.",
+      user,
     });
+  }
+);
 
-    return createdUser; // <-- IMPORTANT
-  });
-
-  const accessToken = generateAccessToken(user.id);
-  const refreshToken = generateRefreshToken(user.id);
-
-  res.cookie("accessToken", accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 1000 * 60 * 15,
-  });
-
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 1000 * 60 * 60 * 24 * 30,
-  });
-
-  res.status(200).json({ message: "Account Successfully Registered.", user });
-});
-
-// GET USER DATA CONTROLLER
+// GET USER DATA
 export const getUserDataController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user;
+    if (!req.user?.id) throw new Error("No user in request.");
 
     const user = await prisma.user.findFirst({
-      where: {
-        id: userId,
-      },
-      include: {
-        accounts: true,
-      },
+      where: { id: req.user.id },
+      include: { accounts: true },
     });
 
-    if (!user)
-      throw new Error("User not found OR Dev Sucks Absolute Fucking Garbage");
+    if (!user) throw new Error("User not found");
 
-    res.status(200).json({ 
-      message: "Successfully User Data Fetched", 
-      user
+    res.status(200).json({
+      message: "Successfully User Data Fetched",
+      user,
     });
-  },
+  }
 );
