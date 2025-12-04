@@ -2,7 +2,7 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
 import prisma from "../prisma.js";
-import { loginOrCreateUserService } from "../services/auth.service.js";
+import { loginOrCreateUserService } from "../services/user.services.js";
 
 interface GoogleConfig {
   clientId: string;

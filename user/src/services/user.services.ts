@@ -1,6 +1,6 @@
 import prisma from  "../prisma.js"
 
-export const loginOrCreateAccountService = async (data) => {
+export const loginOrCreateUserService = async (data) => {
   const { provider, providerId, displayName, email, picture } = data;
 
   try {
@@ -71,3 +71,4 @@ export const loginOrCreateAccountService = async (data) => {
     console.log('Session stopped');
   }
 };
+

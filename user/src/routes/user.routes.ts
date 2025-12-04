@@ -32,8 +32,9 @@ userRoutes.get(
     failureRedirect: failedUrl
   }),
   (_, res) => {
-    return res.redirect("/")
+    res.redirect("/")
   }
 )
 
 export default userRoutes
+
