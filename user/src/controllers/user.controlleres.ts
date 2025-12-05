@@ -31,13 +31,13 @@ export const loginUserController = asyncHandler(
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
 
-    setCookies(res, accessToken, refreshToken)
+    setCookies(res, accessToken, refreshToken);
 
     res.status(200).json({
       message: "Login successful",
       user,
     });
-  }
+  },
 );
 
 // REGISTER
@@ -66,13 +66,13 @@ export const registerUserController = asyncHandler(
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
 
-    setCookies(res, accessToken, refreshToken)
+    setCookies(res, accessToken, refreshToken);
 
     res.status(200).json({
       message: "Account Successfully Registered.",
       user,
     });
-  }
+  },
 );
 
 // GET USER DATA
@@ -91,27 +91,27 @@ export const getUserDataController = asyncHandler(
       message: "Successfully User Data Fetched",
       user,
     });
-  }
+  },
 );
 
 // UPDATE USER DATA
 export const updateUserDataController = asyncHandler(
   async (req: Request, res: Response) => {
-    const {name, instagram, facebook, bio, profilePicture} = req.body;
-    const userId = req.user?.id
-    
+    const { name, instagram, facebook, bio, profilePicture } = req.body;
+    const userId = req.user?.id;
+
     const user = await prisma.user.update({
       where: { id: userId },
       data: { name, instagram, facebook, bio, profilePicture },
-    })
+    });
 
     if (!user) throw new Error("User not found");
 
     res.status(HTTPSTATUS.OK).json({
       message: "Successfully User Data Updated",
       user,
-    })
-  }
-)
+    });
+  },
+);
 
 // LOGOUT USER

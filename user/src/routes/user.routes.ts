@@ -1,5 +1,5 @@
 import {Router} from "express"
-import { getUserDataController, loginUserController, registerUserController } from "../controllers/user.controlleres.js"
+import { getUserDataController, loginUserController, registerUserController, updateUserDataController } from "../controllers/user.controlleres.js"
 import { isAuthenticatedMiddleware } from "../middlewares/isAuthenticatedMiddleware.js"
 import passport from "../configs/passport.config.js"
 import { generateAccessToken, generateRefreshToken } from "../utils/token.utils.js"
@@ -11,6 +11,8 @@ const userRoutes = Router()
 userRoutes.post("/login", loginUserController)
 
 userRoutes.post("/register", registerUserController)
+
+userRoutes.put("/update", isAuthenticatedMiddleware, updateUserDataController)
 
 userRoutes.get("/current", isAuthenticatedMiddleware, getUserDataController)
 
@@ -38,7 +40,7 @@ userRoutes.get(
 );
 
 // Logout route
-userRoutes.get("/logout", (req, res) => {
+userRoutes.post("/logout", (req, res) => {
   res.clearCookie("accessToken");
   res.clearCookie("refreshToken");
   res.clearCookie("session")
