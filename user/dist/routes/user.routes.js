@@ -2,6 +2,8 @@ import { Router } from "express";
 import { getUserDataController, loginUserController, registerUserController } from "../controllers/user.controlleres.js";
 import { isAuthenticatedMiddleware } from "../middlewares/isAuthenticatedMiddleware.js";
 import passport from "../configs/passport.config.js";
+import { generateAccessToken, generateRefreshToken } from "../utils/token.utils.js";
+import { setCookies } from "../utils/cookie.utils.js";
 const userRoutes = Router();
 userRoutes.post("/login", loginUserController);
 userRoutes.post("/register", registerUserController);
@@ -12,6 +14,10 @@ userRoutes.get("/google", passport.authenticate("google", {
 }));
 // Callback route
 userRoutes.get("/google/callback", passport.authenticate("google", { failureRedirect: "/" }), (req, res) => {
+    const user = req.user;
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+    setCookies(res, accessToken, refreshToken);
     res.redirect("/"); // Redirect after successful login
 });
 // Logout route

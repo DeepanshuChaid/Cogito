@@ -1,5 +1,5 @@
 import express from "express";
-import dotenv from "dotenv/config";
+import "dotenv/config";
 import userRoutes from "./routes/user.routes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import cookieParser from "cookie-parser";
@@ -7,6 +7,7 @@ import cors from "cors";
 import prisma from "./prisma.js";
 import passport from "passport";
 import session from "express-session";
+import { isAuthenticatedMiddleware } from "./middlewares/isAuthenticatedMiddleware.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   }),
 );
@@ -44,12 +45,21 @@ app.use("/api/user", userRoutes);
 
 app.use(errorHandler);
 
-app.get("/", (req, res) => res.send("Hello World"));
+app.get("/", (req, res) => {
+  res.send("Hello World");
+});
+
+app.get("/test/google", isAuthenticatedMiddleware, async (req, res) => {
+  const userId = req.user?.id;
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { accounts: true },
+  });
+  res.json(user);
+});
 
 app.listen(PORT, async () => {
   console.log("Server is running on port " + PORT);
   const data = await prisma.user.findMany();
   console.log(data);
 });
-
-
