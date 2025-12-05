@@ -39,7 +39,12 @@ export const isAuthenticatedMiddleware = asyncHandler(
 
         const newAccessToken = generateAccessToken(decodedRefresh.userId);
 
-        res.cookie("accessToken", newAccessToken, { httpOnly: true });
+        res.cookie("accessToken", newAccessToken, { 
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
+          sameSite: 'strict',  // Critical: Prevents CSRF attacks
+          maxAge: 15 * 60 * 1000
+        });
 
         req.user.id = decodedRefresh.userId;
         return next();
@@ -47,6 +52,8 @@ export const isAuthenticatedMiddleware = asyncHandler(
 
       throw new Error("Unauthorized. Please login.");
     } catch (error) {
+      res.clearCookie("accessToken");
+      res.clearCookie("refreshToken");
       throw new Error("Unauthorized. Please login.");
     }
   }

@@ -64,3 +64,12 @@ export const getUserDataController = asyncHandler(async (req, res) => {
         user,
     });
 });
+// UPDATE USER DATA
+export const updateUserDataController = asyncHandler(async (req, res) => {
+    const { name, instagram, facebook, bio, profilePicture } = req.body;
+    const userId = req.user?.id;
+    const user = await prisma.user.update({
+        where: { id: req.user?.id },
+        data: { name, instagram, facebook, bio, profilePicture },
+    });
+});

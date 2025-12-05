@@ -51,3 +51,5 @@ app.listen(PORT, async () => {
   const data = await prisma.user.findMany();
   console.log(data);
 });
+
+
