@@ -23,7 +23,7 @@ passport.use(
         // Extract data from passport profile object correctly
         const email = profile.emails?.[0]?.value;
         const googleId = profile.id;
-        const picture = profile. photos?.[0]?.value;
+        const picture = profile.photos?.[0]?.value;
         const displayName = profile.displayName;
 
         if (! googleId || !email) {
