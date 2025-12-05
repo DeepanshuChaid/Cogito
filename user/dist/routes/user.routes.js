@@ -22,10 +22,9 @@ userRoutes.get("/google/callback", passport.authenticate("google", { failureRedi
 });
 // Logout route
 userRoutes.get("/logout", (req, res) => {
-    req.logout((err) => {
-        if (err)
-            return res.status(500).json({ error: err.message });
-        res.redirect("/");
-    });
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+    res.clearCookie("session");
+    res.status(200).json({ message: "Logged out successfully" });
 });
 export default userRoutes;
