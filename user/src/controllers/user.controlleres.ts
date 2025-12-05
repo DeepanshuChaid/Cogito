@@ -11,6 +11,7 @@ import {
   registerUserSchema,
 } from "../validation/user.validation.js";
 import { setCookies } from "../utils/cookie.utils.js";
+import HTTPSTATUS from "../configs/http.config.js";
 
 // LOGIN
 export const loginUserController = asyncHandler(
@@ -100,8 +101,17 @@ export const updateUserDataController = asyncHandler(
     const userId = req.user?.id
     
     const user = await prisma.user.update({
-      where: { id: req.user?.id },
+      where: { id: userId },
       data: { name, instagram, facebook, bio, profilePicture },
+    })
+
+    if (!user) throw new Error("User not found");
+
+    res.status(HTTPSTATUS.OK).json({
+      message: "Successfully User Data Updated",
+      user,
     })
   }
 )
+
+// LOGOUT USER
