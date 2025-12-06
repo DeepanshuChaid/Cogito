@@ -5,7 +5,9 @@ import { generateAccessToken, generateRefreshToken, } from "../utils/token.utils
 import { loginUserSchema, registerUserSchema, } from "../validation/user.validation.js";
 import { setCookies } from "../utils/cookie.utils.js";
 import HTTPSTATUS from "../configs/http.config.js";
-// LOGIN
+import getBuffer from "../utils/dataUri.utils.js";
+import { v2 as cloudinary } from 'cloudinary';
+// LOGIN USER CONTROLLER
 export const loginUserController = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     const parsed = loginUserSchema.parse({ email, password });
@@ -20,12 +22,12 @@ export const loginUserController = asyncHandler(async (req, res) => {
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
     setCookies(res, accessToken, refreshToken);
-    res.status(200).json({
+    res.status(HTTPSTATUS.OK).json({
         message: "Login successful",
         user,
     });
 });
-// REGISTER
+// REGISTER USER CONTROLLER
 export const registerUserController = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
     registerUserSchema.parse({ name, email, password });
@@ -45,12 +47,12 @@ export const registerUserController = asyncHandler(async (req, res) => {
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
     setCookies(res, accessToken, refreshToken);
-    res.status(200).json({
+    res.status(HTTPSTATUS.CREATED).json({
         message: "Account Successfully Registered.",
         user,
     });
 });
-// GET USER DATA
+// GET USER DATA CONTROLLER
 export const getUserDataController = asyncHandler(async (req, res) => {
     if (!req.user?.id)
         throw new Error("No user in request.");
@@ -60,12 +62,12 @@ export const getUserDataController = asyncHandler(async (req, res) => {
     });
     if (!user)
         throw new Error("User not found");
-    res.status(200).json({
+    res.status(HTTPSTATUS.OK).json({
         message: "Successfully User Data Fetched",
         user,
     });
 });
-// UPDATE USER DATA
+// UPDATE USER DATA CONTROLLER
 export const updateUserDataController = asyncHandler(async (req, res) => {
     const { name, instagram, facebook, bio, profilePicture } = req.body;
     const userId = req.user?.id;
@@ -80,4 +82,34 @@ export const updateUserDataController = asyncHandler(async (req, res) => {
         user,
     });
 });
-// LOGOUT USER
+// LOGOUT USER CONTROLLER
+export const logoutUserController = asyncHandler(async (req, res) => {
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+    res.clearCookie("session");
+    res.status(200).json({ message: "Logged out successfully" });
+});
+// UPDATE PROFILE PICTURE CONTROLLER
+export const updateProfilePictureController = asyncHandler(async (req, res) => {
+    const userId = req.user?.id;
+    const file = req.file;
+    if (!file)
+        return res
+            .status(HTTPSTATUS.BAD_REQUEST)
+            .json({ message: "No file uploaded" });
+    const fileBuffer = getBuffer(file);
+    if (!fileBuffer || !fileBuffer.content) {
+        return res.status(HTTPSTATUS.BAD_REQUEST).json({ message: "Failed to Generate Buffer" });
+    }
+    const cloud = await cloudinary.uploader.upload(fileBuffer.content, {
+        folder: "blogs"
+    });
+    const user = await prisma.user.update({
+        where: { id: userId },
+        data: { profilePicture: cloud.secure_url }
+    });
+    res.json({
+        message: "Profile Picture Updated Successfully",
+        user
+    });
+});
