@@ -9,5 +9,5 @@ export const errorHandler = (err, req, res, next) => {
         // @ts-ignore
         message = err.error;
     }
-    res.status(500).json({ error: message });
+    res.status(500).json({ error: message, message });
 };
