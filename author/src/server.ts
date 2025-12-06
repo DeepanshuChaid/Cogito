@@ -32,5 +32,8 @@ app.listen(PORT, async () => {
   console.log("Author Server is running on port " + PORT)
   const data = await prisma.user.findMany()
   console.log(data)
+  const blog = await prisma.blog.findMany()
+
+  console.log(blog)
 })
 
