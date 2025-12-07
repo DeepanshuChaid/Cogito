@@ -6,14 +6,16 @@ import {
   deleteBlogController,
   getAllUserBlogsController,
   getBlogByIdController,
+  getRecommendedBlogsController,
+} from "../controllers/blog.controllers.js";
+import {
   likeBlogController,
   dislikeBlogController,
-  getRecommendedBlogsController
-} from "../controllers/blog.controllers.js";
+} from "../controllers/reaction.controllers.js";
 
 const blogRoutes = Router();
 
-blogRoutes.get("/get/:id", getBlogByIdController)
+blogRoutes.get("/get/:id", getBlogByIdController);
 
 blogRoutes.post("/create", uploadFile, createBlogController);
 
@@ -21,13 +23,13 @@ blogRoutes.put("/update/:id", uploadFile, updateBlogController);
 
 blogRoutes.delete("/delete/:id", deleteBlogController);
 
-blogRoutes.get("/all", getAllUserBlogsController) 
+blogRoutes.get("/all", getAllUserBlogsController);
 
-blogRoutes.get("/recommended", getRecommendedBlogsController)
+blogRoutes.get("/recommended", getRecommendedBlogsController);
 
-blogRoutes.post("/like/:id", likeBlogController)
+blogRoutes.post("/like/:id", likeBlogController);
 
-blogRoutes.post("/dislike/:id", dislikeBlogController)
+blogRoutes.post("/dislike/:id", dislikeBlogController);
 
 // ADD COMMENT
 

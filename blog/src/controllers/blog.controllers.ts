@@ -48,11 +48,16 @@ export const getBlogByIdController = asyncHandler(
   }
 )
 
+
 // *************************** //
 // CREATE BLOG CONTROLLER
 // *************************** //
 export const createBlogController = asyncHandler(async (req, res) => {
   const { title, description, blogContent, category } = req.body;
+
+  if (category && !Object.values(BLOGCATEGORY).includes(category)) {
+    throw new Error("Invalid category")
+  }
 
   const file = req.file;
 
@@ -81,7 +86,8 @@ export const createBlogController = asyncHandler(async (req, res) => {
 
   await invalidateCache([
     `user_blogs:${req.user?.id}`,
-    'recommended_blogs:*'
+    'recommended_blogs:all',
+    `recommended_blogs:${category}`
   ]);
 
   return res.status(201).json({
@@ -89,6 +95,7 @@ export const createBlogController = asyncHandler(async (req, res) => {
     data: result,
   });
 });
+
 
 // *************************** //
 // UPDATE BLOG CONTROLLER
@@ -139,11 +146,18 @@ export const updateBlogController = asyncHandler(async (req, res) => {
     },
   });
 
-  await invalidateCache([
+  const cachesToInvalidate = [
     `blog:${blogId}`,
     `user_blogs:${req.user?.id}`,
-    'recommended_blogs:*'
-  ]);
+    'recommended_blogs:all',
+    `recommended_blogs:${blog.category}`
+  ];
+
+  if (category && category !== blog.category) {
+    cachesToInvalidate.push(`recommended_blogs:${category}`);
+  }
+
+  await invalidateCache(cachesToInvalidate);
 
   return res.status(200).json({
     message: "Blog updated successfully",
@@ -151,28 +165,34 @@ export const updateBlogController = asyncHandler(async (req, res) => {
   });
 });
 
+
 // *************************** //
 // DELETE BLOG CONTROLLER
 // *************************** //
 export const deleteBlogController = asyncHandler(async (req, res) => {
   const blogId = req.params.id;
 
-  const isAuthorized = await prisma.blog.findUnique({
+  const blog = await prisma.blog.findUnique({
     where: {
       id: blogId
     }
-  }) as { authorId: string }
+  })
 
-  if (isAuthorized.authorId !== req.user?.id) throw new Error("You are not authorized to delete this blog"
+  if (!blog) throw new Error("Blog not found");
 
-  const blog = await prisma.blog.delete({
+  if (blog.authorId !== req.user?.id) {
+    throw new Error("You are not authorized to delete this blog");
+  }
+
+  await prisma.blog.delete({
     where: { id: blogId }
   });
 
   await invalidateCache([
     `blog:${blogId}`,
     `user_blogs:${req.user?.id}`,
-    'recommended_blogs:*'
+    'recommended_blogs:all',
+    `recommended_blogs:${blog.category}`
   ]);
 
   return res.status(200).json({
@@ -180,6 +200,7 @@ export const deleteBlogController = asyncHandler(async (req, res) => {
     data: blog
   })
 });
+
 
 // *************************** //
 // GET ALL USERS BLOGS CONTROLLER
@@ -190,7 +211,8 @@ export const getAllUserBlogsController = asyncHandler(
 
     const cacheKey = `user_blogs:${userId}`
     
-    await getCachedData(res, cacheKey, "User blogs fetched successfully")
+    const cache = await getCachedData(res, cacheKey, "User blogs fetched successfully")
+    if (cache) return
 
     const blogs = await prisma.blog.findMany({
       where: {
@@ -212,6 +234,7 @@ export const getAllUserBlogsController = asyncHandler(
   }
 )
 
+
 // *************************** //
 // GET RECOMMENDED BLOGS CONTROLLER
 // *************************** //
@@ -220,10 +243,15 @@ export const getRecommendedBlogsController = asyncHandler(
     // Optional: get category filter from query
 
     const category = req.query.category as string | undefined;
+
+    if (category && !Object.values(BLOGCATEGORY).includes(category)) {
+      throw new Error("Invalid category")
+    }
     
     const cacheKey = category ? `recommended_blogs:${category}` : 'recommended_blogs:all'
 
-    await getCachedData(res, cacheKey, "Recommended blogs fetched successfully")
+    const cache = await getCachedData(res, cacheKey, "Recommended blogs fetched successfully")
+    if (cache) return
 
     const blogs = await prisma.blog.findMany({
       where: {
@@ -258,168 +286,3 @@ export const getRecommendedBlogsController = asyncHandler(
   }
 );
 
-// *************************** //
-// REACTIONS CONTROLLERS
-// *************************** //
-export const likeBlogController = asyncHandler(
-  async (req, res) => {
-    const blogId = req.params.id
-    const userId = req.user?.id
-
-
-    const blog = await prisma.blog.findUnique({
-      where: {
-        id: blogId
-      }
-    })
-
-    if (!blog) throw new Error("Blog not found")
-
-    const isLiked = await prisma.blogreaction.findFirst({
-      where: {
-        blogId,
-        userId,
-        type: "LIKE"
-      }
-    })
-
-    const isDisliked = await prisma.blogreaction.findFirst({
-      where: {
-        blogId,
-        userId,
-        type: "DISLIKE"
-      }
-    })
-
-    if (isLiked) {
-      await prisma.blogreaction.delete({
-        where: {
-          id: isLiked.id
-        }
-      })
-      return res.status(200).json({
-        message: "Blog unliked successfully"
-      })
-    }
-
-    if (isDisliked) {
-      await prisma.blogreaction.delete({
-        where: {
-          id: isDisliked.id
-        }
-      })
-      await prisma.blogreaction.create({
-        data: {
-          blogId,
-          userId,
-          type: "LIKE"
-        }
-      })
-
-      return res.status(200).json({
-        message: "Blog liked successfully"
-      })
-    }
-
-    const result = await prisma.blogreaction.create({
-      data: {
-        blogId,
-        userId,
-        type: "LIKE"
-      }
-    })
-
-    await invalidateCache([
-      `blog:${blogId}`,
-      'recommended_blogs:*'
-    ]);
-
-    return res.status(200).json({
-      message: "Blog liked successfully",
-      data: result
-    })
-    
-    
-  }
-)
-
-export const dislikeBlogController = asyncHandler(
-  async (req, res) => {
-    const blogId = req.params.id
-    const userId = req.user?.id
-
-    const blog = await prisma.blog.findUnique({
-      where: {
-        id: blogId
-      }
-    })
-
-    if (!blog) throw new Error("Blog not found")
-
-    const isLiked = await prisma.blogreaction.findFirst({
-      where: {
-        blogId,
-        userId,
-        type: "LIKE"
-      }
-    })
-
-    const isDisliked = await prisma.blogreaction.findFirst({
-      where: {
-        blogId,
-        userId,
-        type: "DISLIKE"
-      }
-    })
-
-    if (isDisliked) {
-      await prisma.blogreaction.delete({
-        where: {
-          id: isDisliked.id
-        }
-      })
-      return res.status(200).json({
-        message: "Blog disliked removed successfully"
-      })
-    }
-
-    if (isLiked) {
-      await prisma.blogreaction.delete({
-        where: {
-          id: isLiked.id
-        }
-      })
-      await prisma.blogreaction.create({
-        data: {
-          blogId,
-          userId,
-          type: "DISLIKE"
-        }
-      })
-
-      return res.status(200).json({
-        message: "Blog disliked successfully"
-      })
-    }
-
-    const result = await prisma.blogreaction.create({
-      data: {
-        blogId,
-        userId,
-        type: "DISLIKE"
-      }
-    })
-
-    await invalidateCache([
-      `blog:${blogId}`,
-      'recommended_blogs:*'
-    ]);
-
-    return res.status(200).json({
-      message: "Blog disliked successfully",
-      data: result
-    })
-
-
-  }
-)
