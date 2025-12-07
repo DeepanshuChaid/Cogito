@@ -3,19 +3,29 @@ import getBuffer from "../utils/datauri.utils.js";
 import { v2 as cloudinary } from "cloudinary";
 import prisma from "../prisma.js";
 import { redisClient } from "../server.js";
-import { getCachedData, setCachedData } from "../utils/redis.utils.js";
+import { getCachedData, invalidateCache, setCachedData } from "../utils/redis.utils.js";
 
-
-
+// *************************** //
 // GET BLOG BY ID CONTROLLER
+// *************************** //
 export const getBlogByIdController = asyncHandler(
   async (req, res) => {
     const blogId = req.params.id
     const userId = req.user?.id
+    const cacheKey = `blog:${blogId}`;
 
-    let role;
-
-    await getCachedData(res, `blog:${blogId}`, "Blog fetched successfully")
+    // Try cache first
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      const blog = JSON.parse(cached);
+      const role = blog.authorId === userId ? "author" : "user";
+      return res.status(200).json({
+        message: "Blog fetched successfully",
+        data: blog,
+        role,
+        cached: true
+      });
+    }
     
     const blog = await prisma.blog.findUnique({
       where: {
@@ -26,11 +36,7 @@ export const getBlogByIdController = asyncHandler(
     if (!blog) throw new Error("Blog not found")
     
 
-    if (blog.authorId !== userId){
-      role = "user" 
-    } else {
-      role = "author"
-    }
+    const role = blog.authorId === userId ? "author" : "user";
     
     await setCachedData(`blog:${blogId}`, blog)
 
@@ -42,7 +48,9 @@ export const getBlogByIdController = asyncHandler(
   }
 )
 
+// *************************** //
 // CREATE BLOG CONTROLLER
+// *************************** //
 export const createBlogController = asyncHandler(async (req, res) => {
   const { title, description, blogContent, category } = req.body;
 
@@ -71,13 +79,20 @@ export const createBlogController = asyncHandler(async (req, res) => {
     },
   });
 
+  await invalidateCache([
+    `user_blogs:${req.user?.id}`,
+    'recommended_blogs:*'
+  ]);
+
   return res.status(201).json({
     message: "Blog created successfully",
     data: result,
   });
 });
 
+// *************************** //
 // UPDATE BLOG CONTROLLER
+// *************************** //
 export const updateBlogController = asyncHandler(async (req, res) => {
   const blogId = req.params.id;
   const { title, description, blogContent, category } = req.body;
@@ -124,13 +139,21 @@ export const updateBlogController = asyncHandler(async (req, res) => {
     },
   });
 
+  await invalidateCache([
+    `blog:${blogId}`,
+    `user_blogs:${req.user?.id}`,
+    'recommended_blogs:*'
+  ]);
+
   return res.status(200).json({
     message: "Blog updated successfully",
     data: result,
   });
 });
 
+// *************************** //
 // DELETE BLOG CONTROLLER
+// *************************** //
 export const deleteBlogController = asyncHandler(async (req, res) => {
   const blogId = req.params.id;
 
@@ -146,14 +169,21 @@ export const deleteBlogController = asyncHandler(async (req, res) => {
     where: { id: blogId }
   });
 
+  await invalidateCache([
+    `blog:${blogId}`,
+    `user_blogs:${req.user?.id}`,
+    'recommended_blogs:*'
+  ]);
+
   return res.status(200).json({
     message: "Blog deleted successfully",
     data: blog
   })
 });
 
-
+// *************************** //
 // GET ALL USERS BLOGS CONTROLLER
+// *************************** //
 export const getAllUserBlogsController = asyncHandler(
   async (req, res) => {
     const userId = req.user?.id
@@ -182,7 +212,9 @@ export const getAllUserBlogsController = asyncHandler(
   }
 )
 
+// *************************** //
 // GET RECOMMENDED BLOGS CONTROLLER
+// *************************** //
 export const getRecommendedBlogsController = asyncHandler(
   async (req, res) => {
     // Optional: get category filter from query
@@ -226,7 +258,9 @@ export const getRecommendedBlogsController = asyncHandler(
   }
 );
 
-
+// *************************** //
+// REACTIONS CONTROLLERS
+// *************************** //
 export const likeBlogController = asyncHandler(
   async (req, res) => {
     const blogId = req.params.id
@@ -294,6 +328,11 @@ export const likeBlogController = asyncHandler(
         type: "LIKE"
       }
     })
+
+    await invalidateCache([
+      `blog:${blogId}`,
+      'recommended_blogs:*'
+    ]);
 
     return res.status(200).json({
       message: "Blog liked successfully",
@@ -370,6 +409,11 @@ export const dislikeBlogController = asyncHandler(
         type: "DISLIKE"
       }
     })
+
+    await invalidateCache([
+      `blog:${blogId}`,
+      'recommended_blogs:*'
+    ]);
 
     return res.status(200).json({
       message: "Blog disliked successfully",

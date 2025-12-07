@@ -8,7 +8,7 @@ export const getCachedData = async (res: Response, key: string, message: string)
     console.log("USER BLOGS: Serving from cache")
     return res.status(200).json({
       message: message,
-      REDIS: "TURNED ON",
+      CACHED: true,
       data: JSON.parse(cachedData)
     })
   }
@@ -19,7 +19,7 @@ export const setCachedData = async (key: string, data: any) => {
   console.log("Serving from database")
 }
 
-export const invalideCache = async (keys: string[]) => {
+export const invalidateCache = async (keys: string[]) => {
   for (const key of keys) {
     const idkManMaybeKeys = await redisClient.keys(key)
     if (idkManMaybeKeys.length > 0) {
