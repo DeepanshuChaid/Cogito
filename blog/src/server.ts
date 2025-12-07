@@ -7,16 +7,18 @@ import "dotenv/config";
 import { isAuthenticatedMiddleware } from "./middlewares/isAuthenticatedMiddleware.js";
 import cookieParser from "cookie-parser";
 import { createClient } from "redis";
-
+import BLOGCATEGORY from "./enum/blogCategory.enum.js";
 
 export const redisClient = createClient({
   url: process.env.REDIS_URL_UPSTASH,
-})
+});
 
-redisClient.connect().then(() => {
-  console.log("Redis connected")
-}).catch(console.error("REDIS IS A BITCH MF DID NOT CONNECTED"))
-
+redisClient
+  .connect()
+  .then(() => {
+    console.log("Redis connected");
+  })
+  .catch(console.error("REDIS IS A BITCH MF DID NOT CONNECTED"));
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -39,12 +41,14 @@ app.get("/", (req, res) => {
   res.send("hello world author service");
 });
 
+
 app.listen(PORT, async () => {
   console.log("BLOG Server is running on port " + PORT);
   const data = await prisma.user.findMany();
   console.log(data);
-  const blog = await prisma.blog.findMany({include: {blogReaction: true}});
-
+  
+  const blog = await prisma.blog.findMany({ include: { blogReaction: true } });
+  
   console.log(blog);
-
 });
+

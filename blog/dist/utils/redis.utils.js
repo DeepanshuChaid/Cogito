@@ -11,6 +11,14 @@ export const getCachedData = async (res, key, message) => {
     }
 };
 export const setCachedData = async (key, data) => {
-    await redisClient.set(key, JSON.stringify(data), { EX: 3600 });
+    await redisClient.set(key, JSON.stringify(data), { EX: 1000 });
     console.log("Serving from database");
+};
+export const invalideCache = async (keys) => {
+    for (const key of keys) {
+        const idkManMaybeKeys = await redisClient.keys(key);
+        if (idkManMaybeKeys.length > 0) {
+            await redisClient.del(idkManMaybeKeys);
+        }
+    }
 };

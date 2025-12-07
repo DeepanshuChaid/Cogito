@@ -8,6 +8,7 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
     const blogId = req.params.id;
     const userId = req.user?.id;
     let role;
+    await getCachedData(res, `blog:${blogId}`, "Blog fetched successfully");
     const blog = await prisma.blog.findUnique({
         where: {
             id: blogId
@@ -21,6 +22,7 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
     else {
         role = "author";
     }
+    await setCachedData(`blog:${blogId}`, blog);
     return res.status(200).json({
         message: "Blog fetched successfully",
         data: blog,
@@ -102,13 +104,13 @@ export const deleteBlogController = asyncHandler(async (req, res) => {
     const blogId = req.params.id;
     const isAuthorized = await prisma.blog.findUnique({
         where: {
-            id: blogId,
-        },
+            id: blogId
+        }
     });
     if (isAuthorized.authorId !== req.user?.id)
         throw new Error("You are not authorized to delete this blog");
     const blog = await prisma.blog.delete({
-        where: { id: blogId },
+        where: { id: blogId }
     });
     return res.status(200).json({
         message: "Blog deleted successfully",

@@ -5,6 +5,8 @@ import prisma from "../prisma.js";
 import { redisClient } from "../server.js";
 import { getCachedData, setCachedData } from "../utils/redis.utils.js";
 
+
+
 // GET BLOG BY ID CONTROLLER
 export const getBlogByIdController = asyncHandler(
   async (req, res) => {
@@ -12,20 +14,25 @@ export const getBlogByIdController = asyncHandler(
     const userId = req.user?.id
 
     let role;
+
+    await getCachedData(res, `blog:${blogId}`, "Blog fetched successfully")
     
     const blog = await prisma.blog.findUnique({
       where: {
         id: blogId
       }
     })
-    
+
     if (!blog) throw new Error("Blog not found")
+    
 
     if (blog.authorId !== userId){
       role = "user" 
     } else {
       role = "author"
     }
+    
+    await setCachedData(`blog:${blogId}`, blog)
 
     return res.status(200).json({
       message: "Blog fetched successfully",
@@ -129,14 +136,14 @@ export const deleteBlogController = asyncHandler(async (req, res) => {
 
   const isAuthorized = await prisma.blog.findUnique({
     where: {
-      id: blogId,
-    },
+      id: blogId
+    }
   }) as { authorId: string }
 
   if (isAuthorized.authorId !== req.user?.id) throw new Error("You are not authorized to delete this blog"
 
   const blog = await prisma.blog.delete({
-    where: { id: blogId },
+    where: { id: blogId }
   });
 
   return res.status(200).json({
