@@ -3,6 +3,7 @@ import getBuffer from "../utils/datauri.utils.js";
 import { v2 as cloudinary } from "cloudinary";
 import prisma from "../prisma.js";
 import { redisClient } from "../server.js";
+import { getCachedData, setCachedData } from "../utils/redis.utils.js";
 
 // GET BLOG BY ID CONTROLLER
 export const getBlogByIdController = asyncHandler(
@@ -151,18 +152,8 @@ export const getAllUserBlogsController = asyncHandler(
     const userId = req.user?.id
 
     const cacheKey = `user_blogs:${userId}`
-    const cachedData = await redisClient.get(cacheKey)
-
-    if (cachedData) {
-      console.log("USER BLOGS: Serving from cache")
-      return res.status(200).json({
-        message: "Blogs fetched successfully",
-        REDIS: "TURNED ON",
-        data: JSON.parse(cachedData)
-      })
-    }
-
     
+    await getCachedData(res, cacheKey, "User blogs fetched successfully")
 
     const blogs = await prisma.blog.findMany({
       where: {
@@ -175,7 +166,7 @@ export const getAllUserBlogsController = asyncHandler(
 
     if (!blogs) throw new Error("Error getting Your blogs")
 
-    await redisClient.set(cacheKey, JSON.stringify(blogs), {EX: 3600 * 5})
+    await setCachedData(cacheKey, blogs)
 
     return res.status(200).json({
       message: "Blogs fetched successfully",
@@ -193,16 +184,7 @@ export const getRecommendedBlogsController = asyncHandler(
     
     const cacheKey = category ? `recommended_blogs:${category}` : 'recommended_blogs:all'
 
-    const cachedBlogs = await redisClient.get(cacheKey)
-
-    if (cachedBlogs) {
-      console.log("Serving from cache")
-      return res.status(200).json({
-        message: "Recommended blogs fetched successfully",
-        data: JSON.parse(cachedBlogs),
-        REDIS: "TURNED ON"
-      })
-    }
+    await getCachedData(res, cacheKey, "Recommended blogs fetched successfully")
 
     const blogs = await prisma.blog.findMany({
       where: {
@@ -228,9 +210,7 @@ export const getRecommendedBlogsController = asyncHandler(
     blogsWithScore.sort((a, b) => b.score - a.score);
 
     // Cache the result for 5 hour
-    await redisClient.set(cacheKey, JSON.stringify(blogsWithScore), {EX: 3600 * 5})
-
-    console.log("Serving from database")
+    await setCachedData(cacheKey, blogsWithScore)
 
     return res.status(200).json({
       message: "Recommended blogs fetched successfully",
