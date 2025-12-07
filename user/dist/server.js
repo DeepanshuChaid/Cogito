@@ -8,7 +8,7 @@ import prisma from "./prisma.js";
 import passport from "passport";
 import session from "express-session";
 import { isAuthenticatedMiddleware } from "./middlewares/isAuthenticatedMiddleware.js";
-import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary } from "cloudinary";
 const app = express();
 const PORT = process.env.PORT || 3000;
 cloudinary.config({

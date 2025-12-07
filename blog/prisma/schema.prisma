@@ -27,6 +27,8 @@ model User {
   facebook  String?
   bio       String?
 
+  blogReaction Blogreaction[]
+
   accounts   Account[]
   blogs      Blog[]
   savedBlogs Savedblogs[]
@@ -64,6 +66,8 @@ model Blog {
   image       String
   category    String
 
+  blogReaction Blogreaction[]
+
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId String @db.Uuid
 
@@ -74,6 +78,28 @@ model Blog {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+
+enum ReactionType {
+  LIKE
+  DISLIKE
+}
+
+model Blogreaction {
+  id        String        @id @default(uuid()) @db.Uuid
+  type      ReactionType
+
+  userId    String        @db.Uuid
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  blogId    String        @db.Uuid
+  blog      Blog          @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime      @default(now())
+
+  @@unique([userId, blogId]) // one reaction per user
+}
+
 
 model Comments {
   id       String @id @default(uuid()) @db.Uuid

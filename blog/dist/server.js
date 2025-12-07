@@ -6,6 +6,13 @@ import { v2 as cloudinary } from "cloudinary";
 import "dotenv/config";
 import { isAuthenticatedMiddleware } from "./middlewares/isAuthenticatedMiddleware.js";
 import cookieParser from "cookie-parser";
+// export const redisClient = createClient({
+//   url: process.env.REDIS_URL,
+//   token: process.env.REDIS_TOKEN
+// })
+// redisClient.connect().then(() => {
+//   console.log("Redis connected")
+// }).catch(err => console.error("Redis connected")
 const app = express();
 const PORT = process.env.PORT || 5000;
 cloudinary.config({
@@ -19,12 +26,12 @@ app.use(cookieParser());
 app.use("/api/blog", isAuthenticatedMiddleware, blogRoutes);
 app.use(errorHandler);
 app.get("/", (req, res) => {
-    res.send("hellow world author service");
+    res.send("hello world author service");
 });
 app.listen(PORT, async () => {
-    console.log("Author Server is running on port " + PORT);
+    console.log("BLOG Server is running on port " + PORT);
     const data = await prisma.user.findMany();
     console.log(data);
-    const blog = await prisma.blog.findMany();
+    const blog = await prisma.blog.findMany({ include: { blogReaction: true } });
     console.log(blog);
 });

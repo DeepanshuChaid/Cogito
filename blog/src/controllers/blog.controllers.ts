@@ -3,6 +3,36 @@ import getBuffer from "../utils/datauri.utils.js";
 import { v2 as cloudinary } from "cloudinary";
 import prisma from "../prisma.js";
 
+// GET BLOG BY ID CONTROLLER
+export const getBlogByIdController = asyncHandler(
+  async (req, res) => {
+    const blogId = req.params.id
+    const userId = req.user?.id
+
+    let role;
+    
+    const blog = await prisma.blog.findUnique({
+      where: {
+        id: blogId
+      }
+    })
+    
+    if (!blog) throw new Error("Blog not found")
+
+    if (blog.authorId !== userId){
+      role = "user" 
+    } else {
+      role = "author"
+    }
+
+    return res.status(200).json({
+      message: "Blog fetched successfully",
+      data: blog,
+      role
+    })
+  }
+)
+
 // CREATE BLOG CONTROLLER
 export const createBlogController = asyncHandler(async (req, res) => {
   const { title, description, blogContent, category } = req.body;
@@ -131,5 +161,158 @@ export const getAllUserBlogsController = asyncHandler(
       message: "Blogs fetched successfully",
       data: blogs
     })
+  }
+)
+
+export const likeBlogController = asyncHandler(
+  async (req, res) => {
+    const blogId = req.params.id
+    const userId = req.user?.id
+
+
+    const blog = await prisma.blog.findUnique({
+      where: {
+        id: blogId
+      }
+    })
+
+    if (!blog) throw new Error("Blog not found")
+
+    const isLiked = await prisma.blogreaction.findFirst({
+      where: {
+        blogId,
+        userId,
+        type: "LIKE"
+      }
+    })
+
+    const isDisliked = await prisma.blogreaction.findFirst({
+      where: {
+        blogId,
+        userId,
+        type: "DISLIKE"
+      }
+    })
+
+    if (isLiked) {
+      await prisma.blogreaction.delete({
+        where: {
+          id: isLiked.id
+        }
+      })
+      return res.status(200).json({
+        message: "Blog unliked successfully"
+      })
+    }
+
+    if (isDisliked) {
+      await prisma.blogreaction.delete({
+        where: {
+          id: isDisliked.id
+        }
+      })
+      await prisma.blogreaction.create({
+        data: {
+          blogId,
+          userId,
+          type: "LIKE"
+        }
+      })
+
+      return res.status(200).json({
+        message: "Blog liked successfully"
+      })
+    }
+
+    const result = await prisma.blogreaction.create({
+      data: {
+        blogId,
+        userId,
+        type: "LIKE"
+      }
+    })
+
+    return res.status(200).json({
+      message: "Blog liked successfully",
+      data: result
+    })
+    
+    
+  }
+)
+
+export const dislikeBlogController = asyncHandler(
+  async (req, res) => {
+    const blogId = req.params.id
+    const userId = req.user?.id
+
+    const blog = await prisma.blog.findUnique({
+      where: {
+        id: blogId
+      }
+    })
+
+    if (!blog) throw new Error("Blog not found")
+
+    const isLiked = await prisma.blogreaction.findFirst({
+      where: {
+        blogId,
+        userId,
+        type: "LIKE"
+      }
+    })
+
+    const isDisliked = await prisma.blogreaction.findFirst({
+      where: {
+        blogId,
+        userId,
+        type: "DISLIKE"
+      }
+    })
+
+    if (isDisliked) {
+      await prisma.blogreaction.delete({
+        where: {
+          id: isDisliked.id
+        }
+      })
+      return res.status(200).json({
+        message: "Blog disliked removed successfully"
+      })
+    }
+
+    if (isLiked) {
+      await prisma.blogreaction.delete({
+        where: {
+          id: isLiked.id
+        }
+      })
+      await prisma.blogreaction.create({
+        data: {
+          blogId,
+          userId,
+          type: "DISLIKE"
+        }
+      })
+
+      return res.status(200).json({
+        message: "Blog disliked successfully"
+      })
+    }
+
+    const result = await prisma.blogreaction.create({
+      data: {
+        blogId,
+        userId,
+        type: "DISLIKE"
+      }
+    })
+
+    return res.status(200).json({
+      message: "Blog disliked successfully",
+      data: result
+    })
+
+
   }
 )
