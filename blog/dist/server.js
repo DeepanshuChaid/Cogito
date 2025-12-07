@@ -6,13 +6,13 @@ import { v2 as cloudinary } from "cloudinary";
 import "dotenv/config";
 import { isAuthenticatedMiddleware } from "./middlewares/isAuthenticatedMiddleware.js";
 import cookieParser from "cookie-parser";
-// export const redisClient = createClient({
-//   url: process.env.REDIS_URL,
-//   token: process.env.REDIS_TOKEN
-// })
-// redisClient.connect().then(() => {
-//   console.log("Redis connected")
-// }).catch(err => console.error("Redis connected")
+import { createClient } from "redis";
+export const redisClient = createClient({
+    url: process.env.REDIS_URL_UPSTASH,
+});
+redisClient.connect().then(() => {
+    console.log("Redis connected");
+}).catch(console.error("REDIS IS A BITCH MF DID NOT CONNECTED"));
 const app = express();
 const PORT = process.env.PORT || 5000;
 cloudinary.config({

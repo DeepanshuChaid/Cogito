@@ -9,14 +9,13 @@ import cookieParser from "cookie-parser";
 import { createClient } from "redis";
 
 
-// export const redisClient = createClient({
-//   url: process.env.REDIS_URL,
-//   token: process.env.REDIS_TOKEN
-// })
+export const redisClient = createClient({
+  url: process.env.REDIS_URL_UPSTASH,
+})
 
-// redisClient.connect().then(() => {
-//   console.log("Redis connected")
-// }).catch(err => console.error("Redis connected")
+redisClient.connect().then(() => {
+  console.log("Redis connected")
+}).catch(console.error("REDIS IS A BITCH MF DID NOT CONNECTED"))
 
 
 const app = express();

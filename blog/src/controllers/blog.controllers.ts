@@ -2,6 +2,7 @@ import { asyncHandler } from "../middlewares/asyncHandler.js";
 import getBuffer from "../utils/datauri.utils.js";
 import { v2 as cloudinary } from "cloudinary";
 import prisma from "../prisma.js";
+import { redisClient } from "../server.js";
 
 // GET BLOG BY ID CONTROLLER
 export const getBlogByIdController = asyncHandler(
@@ -149,13 +150,32 @@ export const getAllUserBlogsController = asyncHandler(
   async (req, res) => {
     const userId = req.user?.id
 
+    const cacheKey = `user_blogs:${userId}`
+    const cachedData = await redisClient.get(cacheKey)
+
+    if (cachedData) {
+      console.log("USER BLOGS: Serving from cache")
+      return res.status(200).json({
+        message: "Blogs fetched successfully",
+        REDIS: "TURNED ON",
+        data: JSON.parse(cachedData)
+      })
+    }
+
+    
+
     const blogs = await prisma.blog.findMany({
       where: {
         authorId: userId
+      }, 
+      include: {
+        blogReaction: true
       }
     })
 
     if (!blogs) throw new Error("Error getting Your blogs")
+
+    await redisClient.set(cacheKey, JSON.stringify(blogs), {EX: 3600 * 5})
 
     return res.status(200).json({
       message: "Blogs fetched successfully",
@@ -163,6 +183,62 @@ export const getAllUserBlogsController = asyncHandler(
     })
   }
 )
+
+// GET RECOMMENDED BLOGS CONTROLLER
+export const getRecommendedBlogsController = asyncHandler(
+  async (req, res) => {
+    // Optional: get category filter from query
+
+    const category = req.query.category as string | undefined;
+    
+    const cacheKey = category ? `recommended_blogs:${category}` : 'recommended_blogs:all'
+
+    const cachedBlogs = await redisClient.get(cacheKey)
+
+    if (cachedBlogs) {
+      console.log("Serving from cache")
+      return res.status(200).json({
+        message: "Recommended blogs fetched successfully",
+        data: JSON.parse(cachedBlogs),
+        REDIS: "TURNED ON"
+      })
+    }
+
+    const blogs = await prisma.blog.findMany({
+      where: {
+        ...(category && {
+          category: { equals: category, mode: 'insensitive' }
+        })
+      },
+      include: {
+        blogReaction: true,
+        author: true
+      },
+    });
+
+    // Calculate popularity score: likes - dislikes
+    const blogsWithScore = blogs.map(blog => {
+      const likes = blog.blogReaction.filter(r => r.type === 'LIKE').length;
+      const dislikes = blog.blogReaction.filter(r => r.type === 'DISLIKE').length;
+      const score = likes - dislikes;
+      return { ...blog, score };
+    });
+
+    // Sort by popularity descending
+    blogsWithScore.sort((a, b) => b.score - a.score);
+
+    // Cache the result for 5 hour
+    await redisClient.set(cacheKey, JSON.stringify(blogsWithScore), {EX: 3600 * 5})
+
+    console.log("Serving from database")
+
+    return res.status(200).json({
+      message: "Recommended blogs fetched successfully",
+      data: blogsWithScore
+    });
+  }
+);
+
 
 export const likeBlogController = asyncHandler(
   async (req, res) => {

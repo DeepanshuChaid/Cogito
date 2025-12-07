@@ -7,7 +7,8 @@ import {
   getAllUserBlogsController,
   getBlogByIdController,
   likeBlogController,
-  dislikeBlogController
+  dislikeBlogController,
+  getRecommendedBlogsController
 } from "../controllers/blog.controllers.js";
 
 const blogRoutes = Router();
@@ -21,6 +22,8 @@ blogRoutes.put("/update/:id", uploadFile, updateBlogController);
 blogRoutes.delete("/delete/:id", deleteBlogController);
 
 blogRoutes.get("/all", getAllUserBlogsController) 
+
+blogRoutes.get("/recommended", getRecommendedBlogsController)
 
 blogRoutes.post("/like/:id", likeBlogController)
 

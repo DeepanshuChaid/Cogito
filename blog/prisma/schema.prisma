@@ -128,3 +128,4 @@ model Savedblogs {
 
   @@unique([userId, blogId])
 }
+
