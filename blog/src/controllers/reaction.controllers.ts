@@ -1,6 +1,7 @@
 import { asyncHandler } from "../middlewares/asyncHandler.js"
 import prisma from "../prisma.js"
 import { invalidateCache } from "../utils/redis.utils.js"
+import { invalidateRecommendedBlogsCache } from "./blog.controllers.js"
 
 // *************************** //
 // LIKE BLOG CONTROLLER (IMPROVED)
@@ -32,7 +33,8 @@ export const likeBlogController = asyncHandler(
       // INVALIDATE CACHE WHEN UNLIKING
       await invalidateCache([
         `blog:${blogId}`,
-        'recommended_blogs:*'
+        'recommended_blogs:*',
+        ...blog.category.map(cat => `category:${cat}:*`) // Invalidate all category caches
       ]);
 
       return res.status(200).json({
@@ -52,7 +54,8 @@ export const likeBlogController = asyncHandler(
 
     await invalidateCache([
       `blog:${blogId}`,
-      'recommended_blogs:*'
+      'recommended_blogs:*',
+      ...blog.category.map(cat => `category:${cat}:*`) // Invalidate all category caches
     ]);
 
     return res.status(200).json({
@@ -91,7 +94,8 @@ export const dislikeBlogController = asyncHandler(
       // INVALIDATE CACHE WHEN REMOVING DISLIKE
       await invalidateCache([
         `blog:${blogId}`,
-        'recommended_blogs:*'
+        'recommended_blogs:*',
+        ...blog.category.map(cat => `category:${cat}:*`) // Invalidate all category caches
       ]);
 
       return res.status(200).json({
@@ -111,7 +115,8 @@ export const dislikeBlogController = asyncHandler(
 
     await invalidateCache([
       `blog:${blogId}`,
-      'recommended_blogs:*'
+      'recommended_blogs:*',
+      ...blog.category.map(cat => `category:${cat}:*`) // Invalidate all category caches
     ]);
 
     return res.status(200).json({
