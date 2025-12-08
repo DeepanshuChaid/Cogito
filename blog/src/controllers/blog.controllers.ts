@@ -336,6 +336,38 @@ export const getRecommendedBlogsController = asyncHandler(
 
 
 
+//  *************************** //
+//  GET BLOGS STATS CONTROLLER
+//  *************************** //
+export const getBlogStatsController = asyncHandler(async (req, res) => {
+  const blogId = req.params.id
 
+  const likes = await prisma.blogReaction.count({
+    where: {
+      blogId,
+      type: "LIKE"
+    }
+  })
 
+  const dislikes = await prisma.blogReaction.count({
+    where: {
+      blogId,
+      type: "DISLIKE"
+    }
+  })
 
+  const comments = await prisma.comments.count({
+    where: {
+      blogId
+    }
+  })
+
+  return res.status(200).json({
+    message: "Blog stats fetched successfully",
+    data: {
+      likes,
+      dislikes,
+      comments
+    }
+  })
+})
