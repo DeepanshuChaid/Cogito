@@ -12,7 +12,7 @@ userRoutes.put("/update", isAuthenticatedMiddleware, updateUserDataController);
 userRoutes.post("/update/profile-picture", isAuthenticatedMiddleware, uploadFile, updateProfilePictureController);
 userRoutes.get("/current", isAuthenticatedMiddleware, getUserDataController);
 // Logout route
-userRoutes.post("/logout", logoutUserController);
+userRoutes.post("/logout", isAuthenticatedMiddleware, logoutUserController);
 // Login route - THIS IS WHERE YOU ADD SCOPE
 userRoutes.get("/google", passport.authenticate("google", {
     scope: ["profile", "email"], // ✅ Scope goes here

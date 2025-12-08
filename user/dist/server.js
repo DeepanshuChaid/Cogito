@@ -9,6 +9,16 @@ import passport from "passport";
 import session from "express-session";
 import { isAuthenticatedMiddleware } from "./middlewares/isAuthenticatedMiddleware.js";
 import { v2 as cloudinary } from "cloudinary";
+import { createClient } from "redis";
+export const redisClient = createClient({
+    url: process.env.REDIS_URL_UPSTASH,
+});
+redisClient
+    .connect()
+    .then(() => {
+    console.log("Redis connected");
+})
+    .catch(err => console.error("REDIS IS A BITCH MF DID NOT CONNECTED"));
 const app = express();
 const PORT = process.env.PORT || 3000;
 cloudinary.config({

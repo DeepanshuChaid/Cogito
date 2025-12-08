@@ -14,20 +14,26 @@ datasource db {
 }
 
 model User {
-  id        String  @id @default(uuid()) @db.Uuid
-  
-  name      String
-  email     String  @unique
-  password  String?
-  
-  profilePicture     String?
-  isVerified Boolean  @default(false)
-  
+  id String @id @default(uuid()) @db.Uuid
+
+  name     String
+  email    String  @unique
+  password String?
+
+  profilePicture String?
+  isVerified     Boolean @default(false)
+
   instagram String?
   facebook  String?
   bio       String?
 
-  accounts Account[]
+  blogReaction Blogreaction[]
+
+  accounts   Account[]
+  blogs      Blog[]
+  savedBlogs Savedblogs[]
+
+  comments Comments[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -39,20 +45,213 @@ enum Provider {
 }
 
 model Account {
-  id         String   @id @default(uuid()) @db.Uuid
-  provider   Provider
-  providerId String?
+  id           String    @id @default(uuid()) @db.Uuid
+  provider     Provider
+  providerId   String?
   refreshToken String?
   tokenExpiry  DateTime?
 
   userId String @db.Uuid
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Blog {
+  id          String @id @default(uuid()) @db.Uuid
+  title       String
+  description String
+  blogContent String
+  image       String
+  category    BlogCategory[]
+
+  blogReaction Blogreaction[]
+
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId String @db.Uuid
+
+  comments Comments[]
+
+  savedBlogs Savedblogs[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 
+enum ReactionType {
+  LIKE
+  DISLIKE
+}
+
+model Blogreaction {
+  id        String        @id @default(uuid()) @db.Uuid
+  type      ReactionType
+
+  userId    String        @db.Uuid
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  blogId    String        @db.Uuid
+  blog      Blog          @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime      @default(now())
+
+  @@unique([userId, blogId]) // one reaction per user
+}
 
 
+model Comments {
+  id       String @id @default(uuid()) @db.Uuid
+  comment  String
 
+  blog   Blog   @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  blogId String @db.Uuid
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.Uuid
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Savedblogs {
+  id String @id @default(uuid()) @db.Uuid
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.Uuid
+
+  blog   Blog   @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  blogId String @db.Uuid
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, blogId])
+}
+
+enum BlogCategory {
+  TECHNOLOGY
+  PROGRAMMING
+  WEB_DEVELOPMENT
+  MOBILE_DEVELOPMENT
+  CLOUD_COMPUTING
+  AI_ML
+  CYBERSECURITY
+  DEVOPS
+  DATA_SCIENCE
+  UI_UX
+  SOFTWARE_ENGINEERING
+
+  BUSINESS
+  STARTUPS
+  MARKETING
+  ENTREPRENEURSHIP
+  FINANCE
+  INVESTING
+  ECOMMERCE
+  PRODUCTIVITY
+  LEADERSHIP
+  PERSONAL_DEVELOPMENT
+
+  HEALTH
+  FITNESS
+  NUTRITION
+  MENTAL_HEALTH
+  SELF_CARE
+  MEDICINE
+
+  EDUCATION
+  STUDY_TIPS
+  LEARNING
+  MOTIVATION
+
+  ENTERTAINMENT
+  MOVIES
+  TV_SHOWS
+  ANIME
+  GAMING
+  MUSIC
+  CELEBRITY
+
+  LIFESTYLE
+  TRAVEL
+  FOOD
+  COOKING
+  FASHION
+  BEAUTY
+  RELATIONSHIPS
+  PARENTING
+  MINIMALISM
+
+  NEWS
+  POLITICS
+  WORLD
+  CURRENT_EVENTS
+
+  SPORTS
+  FOOTBALL
+  CRICKET
+  BASKETBALL
+  MMA
+  BOXING
+  ESPORTS
+
+  ART
+  DESIGN
+  PHOTOGRAPHY
+  WRITING
+  POETRY
+  BOOKS
+
+  SCIENCE
+  ASTRONOMY
+  PHYSICS
+  CHEMISTRY
+  BIOLOGY
+  SPACE
+
+  FINTECH
+  CRYPTO
+  BLOCKCHAIN
+  WEB3
+  NFT
+
+  RANDOM
+  HUMOR
+  MEMES
+  STORYTIME
+  OPINION
+
+  HISTORY
+  CULTURE
+  PHILOSOPHY
+  RELIGION
+  ETHICS
+  ENVIRONMENT
+  CLIMATE
+  DIY
+  HOME
+  GARDENING
+  PETS
+  AUTOMOTIVE
+  ENGINEERING
+  HARDWARE
+  REVIEWS
+  HOW_TO
+  GUIDES
+  CAREER
+  FREELANCING
+  REMOTE_WORK
+
+  /// 🔞 ADULT / SEXUALITY SECTION
+  SEX_EDUCATION
+  SEXUAL_HEALTH
+  RELATIONSHIP_ADVICE
+  DATING_TIPS
+  INTIMACY
+  BODY_POSITIVITY
+  KINK_DISCUSSION
+  LGBTQ_TOPICS
+  CONSENT_AND_SAFETY
+  ADULT_STORIES
+}

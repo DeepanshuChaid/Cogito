@@ -6,19 +6,28 @@ import { loginUserSchema, registerUserSchema, } from "../validation/user.validat
 import { setCookies } from "../utils/cookie.utils.js";
 import HTTPSTATUS from "../configs/http.config.js";
 import getBuffer from "../utils/dataUri.utils.js";
-import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary } from "cloudinary";
+import { redisClient } from "../server.js";
 // LOGIN USER CONTROLLER
 export const loginUserController = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     const parsed = loginUserSchema.parse({ email, password });
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user)
-        throw new Error("User not found");
+    const user = await prisma.user.findUnique({
+        where: { email },
+        include: {
+            accounts: true,
+        },
+    });
     if (!user.password)
         throw new Error("User has no password");
+    if (!user)
+        throw new Error("User not found");
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid)
         throw new Error("Invalid password");
+    // REDIS :- CACHE USER DATA
+    const cacheKey = `user_data:${user.id}`;
+    await redisClient.set(cacheKey, JSON.stringify(user), { EX: 3600 });
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
     setCookies(res, accessToken, refreshToken);
@@ -44,6 +53,9 @@ export const registerUserController = asyncHandler(async (req, res) => {
         });
         return createdUser;
     });
+    // REDIS :- CACHE USER DATA
+    const cacheKey = `user_data:${user.id}`;
+    await redisClient.set(cacheKey, JSON.stringify(user), { EX: 3600 });
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
     setCookies(res, accessToken, refreshToken);
@@ -56,12 +68,24 @@ export const registerUserController = asyncHandler(async (req, res) => {
 export const getUserDataController = asyncHandler(async (req, res) => {
     if (!req.user?.id)
         throw new Error("No user in request.");
+    // REDIS :- CACHE USER DATA
+    const cacheKey = `user_data:${req.user.id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+        console.log("USER DATA: Serving from cache");
+        return res.status(200).json({
+            message: "Successfully User Data Fetched",
+            user: JSON.parse(cachedData)
+        });
+    }
     const user = await prisma.user.findFirst({
         where: { id: req.user.id },
         include: { accounts: true },
     });
     if (!user)
         throw new Error("User not found");
+    // REDIS :- CACHE USER DATA
+    await redisClient.set(cacheKey, JSON.stringify(user), { EX: 3600 });
     res.status(HTTPSTATUS.OK).json({
         message: "Successfully User Data Fetched",
         user,
@@ -77,6 +101,10 @@ export const updateUserDataController = asyncHandler(async (req, res) => {
     });
     if (!user)
         throw new Error("User not found");
+    const cacheKey = `user_data:${userId}`;
+    await redisClient.del(cacheKey);
+    // REDIS :- CACHE USER DATA
+    await redisClient.set(cacheKey, JSON.stringify(user), { EX: 3600 });
     res.status(HTTPSTATUS.OK).json({
         message: "Successfully User Data Updated",
         user,
@@ -99,17 +127,23 @@ export const updateProfilePictureController = asyncHandler(async (req, res) => {
             .json({ message: "No file uploaded" });
     const fileBuffer = getBuffer(file);
     if (!fileBuffer || !fileBuffer.content) {
-        return res.status(HTTPSTATUS.BAD_REQUEST).json({ message: "Failed to Generate Buffer" });
+        return res
+            .status(HTTPSTATUS.BAD_REQUEST)
+            .json({ message: "Failed to Generate Buffer" });
     }
     const cloud = await cloudinary.uploader.upload(fileBuffer.content, {
-        folder: "blogs"
+        folder: "blogs",
     });
     const user = await prisma.user.update({
         where: { id: userId },
-        data: { profilePicture: cloud.secure_url }
+        data: { profilePicture: cloud.secure_url },
     });
+    const cacheKey = `user_data:${userId}`;
+    await redisClient.del(cacheKey);
+    // REDIS :- CACHE USER DATA
+    await redisClient.set(cacheKey, JSON.stringify(user), { EX: 3600 });
     res.json({
         message: "Profile Picture Updated Successfully",
-        user
+        user,
     });
 });

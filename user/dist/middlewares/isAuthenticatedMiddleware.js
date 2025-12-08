@@ -28,11 +28,11 @@ export const isAuthenticatedMiddleware = asyncHandler(async (req, res, next) => 
             req.user.id = decodedRefresh.userId;
             return next();
         }
-        throw new Error("Unauthorized. Please login.");
+        throw new Error("UnAuthenticated, Please login to continue.");
     }
     catch (error) {
         res.clearCookie("accessToken");
         res.clearCookie("refreshToken");
-        throw new Error("Unauthorized. Please login.");
+        throw new Error("UnAuthenticated, Please login.");
     }
 });
