@@ -105,6 +105,11 @@ model Comments {
   id       String @id @default(uuid()) @db.Uuid
   comment  String
 
+  parentId String? @db.Uuid
+  parent  Comments? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+
+  replies Comments[] @relation("CommentReplies")
+
   blog   Blog   @relation(fields: [blogId], references: [id], onDelete: Cascade)
   blogId String @db.Uuid
 
