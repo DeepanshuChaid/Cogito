@@ -15,6 +15,7 @@ import {
 } from "../utils/token.utils.js";
 import { setCookies } from "../utils/cookie.utils.js";
 import uploadFile from "../middlewares/multerMiddleware.js";
+import { redisClient } from "../server.js";
 
 const userRoutes = Router();
 
@@ -29,7 +30,7 @@ userRoutes.post("/update/profile-picture", isAuthenticatedMiddleware, uploadFile
 userRoutes.get("/current", isAuthenticatedMiddleware, getUserDataController);
 
 // Logout route
-userRoutes.post("/logout", logoutUserController);
+userRoutes.post("/logout", isAuthenticatedMiddleware,  logoutUserController);
 
 
 // Login route - THIS IS WHERE YOU ADD SCOPE
@@ -46,7 +47,6 @@ userRoutes.get(
   passport.authenticate("google", { failureRedirect: "/" }),
   (req, res) => {
     const user = req.user as { id: string };
-
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
 
