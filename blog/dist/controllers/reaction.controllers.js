@@ -25,7 +25,8 @@ export const likeBlogController = asyncHandler(async (req, res) => {
         // INVALIDATE CACHE WHEN UNLIKING
         await invalidateCache([
             `blog:${blogId}`,
-            'recommended_blogs:*'
+            'recommended_blogs:*',
+            ...blog.category.map(cat => `category:${cat}:*`) // Invalidate all category caches
         ]);
         return res.status(200).json({
             message: "Blog unliked successfully"
@@ -41,7 +42,8 @@ export const likeBlogController = asyncHandler(async (req, res) => {
     });
     await invalidateCache([
         `blog:${blogId}`,
-        'recommended_blogs:*'
+        'recommended_blogs:*',
+        ...blog.category.map(cat => `category:${cat}:*`) // Invalidate all category caches
     ]);
     return res.status(200).json({
         message: "Blog liked successfully"
@@ -71,7 +73,8 @@ export const dislikeBlogController = asyncHandler(async (req, res) => {
         // INVALIDATE CACHE WHEN REMOVING DISLIKE
         await invalidateCache([
             `blog:${blogId}`,
-            'recommended_blogs:*'
+            'recommended_blogs:*',
+            ...blog.category.map(cat => `category:${cat}:*`) // Invalidate all category caches
         ]);
         return res.status(200).json({
             message: "Blog dislike removed successfully"
@@ -87,7 +90,8 @@ export const dislikeBlogController = asyncHandler(async (req, res) => {
     });
     await invalidateCache([
         `blog:${blogId}`,
-        'recommended_blogs:*'
+        'recommended_blogs:*',
+        ...blog.category.map(cat => `category:${cat}:*`) // Invalidate all category caches
     ]);
     return res.status(200).json({
         message: "Blog disliked successfully"
