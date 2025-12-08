@@ -1,6 +1,7 @@
 import express from "express";
 import prisma from "./prisma.js";
 import blogRoutes from "./routes/blog.routes.js";
+import commentRoutes from "./routes/comment.routes.js";
 import { errorHandler } from "./middlewares/errorHandlerMiddleware.js";
 import { v2 as cloudinary } from "cloudinary";
 import "dotenv/config";
@@ -28,6 +29,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/api/blog", isAuthenticatedMiddleware, blogRoutes);
+app.use("/api/comment", isAuthenticatedMiddleware, commentRoutes);
 app.use(errorHandler);
 app.get("/", (req, res) => {
     res.send("hello world author service");
