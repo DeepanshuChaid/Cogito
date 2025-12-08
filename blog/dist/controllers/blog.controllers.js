@@ -74,8 +74,7 @@ export const createBlogController = asyncHandler(async (req, res) => {
         },
         include: {
             blogReaction: true,
-            author: true,
-            comments: true
+            author: true
         }
     });
     await invalidateCache([
@@ -187,9 +186,7 @@ export const getAllUserBlogsController = asyncHandler(async (req, res) => {
             authorId: userId
         },
         include: {
-            blogReaction: true,
-            author: true,
-            comments: true
+            author: true
         }
     });
     if (!blogs)
@@ -234,9 +231,7 @@ export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
                 })
             },
             include: {
-                blogReaction: true,
                 author: true,
-                comments: true
             },
         });
         // Calculate popularity score: likes - dislikes

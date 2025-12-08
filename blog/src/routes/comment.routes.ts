@@ -1,8 +1,13 @@
-import {Router} from "express"
-import {createCommentController} from "../controllers/comment.controllers.js"
+import { Router } from "express";
+import {
+  createCommentController,
+  getAllCommentsInBlogController,
+} from "../controllers/comment.controllers.js";
 
-const commentRoutes = Router()
+const commentRoutes = Router();
 
-commentRoutes.post("/create/blog/:blogId", createCommentController)
+commentRoutes.post("/create/blog/:blogId", createCommentController);
 
-export default commentRoutes
+commentRoutes.get("/get/blog/:blogId", getAllCommentsInBlogController);
+
+export default commentRoutes;

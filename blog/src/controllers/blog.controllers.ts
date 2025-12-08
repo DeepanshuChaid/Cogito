@@ -91,8 +91,7 @@ export const createBlogController = asyncHandler(async (req, res) => {
     },
     include: {
       blogReaction: true,
-      author: true,
-      comments: true  
+      author: true
     }
   });
 
@@ -235,9 +234,7 @@ export const getAllUserBlogsController = asyncHandler(
         authorId: userId
       }, 
       include: {
-        blogReaction: true,
-        author: true,
-        comments: true
+        author: true
       }
     })
 
@@ -292,9 +289,7 @@ export const getRecommendedBlogsController = asyncHandler(
           })
         },
         include: {
-          blogReaction: true,
           author: true,
-          comments: true
         },
       });
 
