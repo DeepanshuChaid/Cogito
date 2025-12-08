@@ -36,6 +36,6 @@ app.listen(PORT, async () => {
     console.log("BLOG Server is running on port " + PORT);
     const data = await prisma.user.findMany();
     console.log(data);
-    const blog = await prisma.blog.findMany({ include: { blogReaction: true } });
+    const blog = await prisma.blog.findMany({ include: { blogReaction: true, comments: true, } });
     console.log(blog);
 });

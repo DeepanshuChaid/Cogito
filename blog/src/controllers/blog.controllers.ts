@@ -5,6 +5,7 @@ import prisma from "../prisma.js";
 import { redisClient } from "../server.js";
 import { getCachedData, invalidateCache, setCachedData } from "../utils/redis.utils.js";
 import BLOGCATEGORY from "../enum/blogCategory.enum.js";
+import { invalidateRecommendedBlogsCache } from "../utils/redis.utils.js"
 
 // *************************** //
 // GET BLOG BY ID CONTROLLER
@@ -339,27 +340,6 @@ export const getRecommendedBlogsController = asyncHandler(
 );
 
 
-// *************************** //
-// HELPER: INVALIDATE RECOMMENDED BLOGS CACHE
-// *************************** //
-// Call this whenever a blog is created, updated, deleted, or reactions change
-export const invalidateRecommendedBlogsCache = async (blogCategories?: string[]) => {
-  const keys = ['recommended_blogs:all'];
-
-  // If we know the specific categories, invalidate all of them
-  if (blogCategories && blogCategories.length > 0) {
-    blogCategories.forEach(cat => {
-      keys.push(`recommended_blogs:${cat}`);
-    });
-  } else {
-    // If categories unknown, nuke all category caches
-    for (const cat of Object.values(BLOGCATEGORY)) {
-      keys.push(`recommended_blogs:${cat}`);
-    }
-  }
-
-  await Promise.all(keys.map(key => redisClient.del(key)));
-};
 
 
 

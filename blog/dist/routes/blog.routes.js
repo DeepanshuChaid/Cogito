@@ -11,5 +11,4 @@ blogRoutes.get("/all", getAllUserBlogsController);
 blogRoutes.get("/recommended", getRecommendedBlogsController);
 blogRoutes.post("/like/:id", likeBlogController);
 blogRoutes.post("/dislike/:id", dislikeBlogController);
-// ADD COMMENT
 export default blogRoutes;
