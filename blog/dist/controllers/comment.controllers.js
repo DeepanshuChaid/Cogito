@@ -47,25 +47,13 @@ export const deleteCommentController = asyncHandler(async (req, res) => {
     if (!blog)
         throw new Error("Blog not found");
     const role = blog.authorId === userId ? "author" : "user";
-    const comment = await prisma.comments.findUnique({ where: { id: commentId } });
+    const comment = await prisma.comments.findUnique({
+        where: { id: commentId },
+    });
     if (!comment)
         throw new Error("Comment not found");
     if (comment.userId !== userId && role !== "author") {
         throw new Error("You are not authorized to delete this comment");
-    }
-    if (role === "author") {
-        await prisma.comments.delete({ where: { id: commentId } });
-        await invalidateCache([
-            `blog:${blogId}`,
-            `user_blogs:${userId}`,
-            "recommended_blogs:all",
-        ]);
-        await invalidateRecommendedBlogsCache(blog.category);
-        return res.status(200).json({
-            message: "Comment deleted successfully",
-            role,
-            data: comment
-        });
     }
     await prisma.comments.delete({ where: { id: commentId } });
     // Invalidate cache for the blog and its comments
@@ -78,7 +66,7 @@ export const deleteCommentController = asyncHandler(async (req, res) => {
     return res.status(200).json({
         message: "Comment deleted successfully",
         role,
-        data: comment
+        data: comment,
     });
 });
 // *************************** //
@@ -92,13 +80,19 @@ export const updateCommentController = asyncHandler(async (req, res) => {
     const blog = await prisma.blog.findUnique({ where: { id: blogId } });
     if (!blog)
         throw new Error("Blog not found");
-    const newComment = await prisma.comments.update({
+    const existingComment = await prisma.comments.findUnique({
         where: { id: commentId },
-        data: { comment, isEdited: true }
     });
-    if (!newComment)
-        throw new Error("Error updating comment");
-    // Invalidate cache for the blog and its comments
+    if (!existingComment)
+        throw new Error("Comment not found");
+    const role = blog.authorId === userId ? "author" : "user";
+    if (existingComment.userId !== userId && role !== "author") {
+        throw new Error("You are not authorized to update this comment");
+    }
+    const updatedComment = await prisma.comments.update({
+        where: { id: commentId },
+        data: { comment, isEdited: true },
+    });
     await invalidateCache([
         `blog:${blogId}`,
         `user_blogs:${userId}`,
@@ -107,6 +101,6 @@ export const updateCommentController = asyncHandler(async (req, res) => {
     await invalidateRecommendedBlogsCache(blog.category);
     return res.status(200).json({
         message: "Comment updated successfully",
-        data: newComment
+        data: updatedComment,
     });
 });
