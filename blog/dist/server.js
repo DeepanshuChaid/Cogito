@@ -17,7 +17,7 @@ redisClient
     .then(() => {
     console.log("Redis connected");
 })
-    .catch(err => console.error("REDIS IS A BITCH MF DID NOT CONNECTED"));
+    .catch((err) => console.error("REDIS IS A BITCH MF DID NOT CONNECTED"));
 const app = express();
 const PORT = process.env.PORT || 5000;
 cloudinary.config({
@@ -38,6 +38,16 @@ app.listen(PORT, async () => {
     console.log("BLOG Server is running on port " + PORT);
     const data = await prisma.user.findMany();
     console.log(data);
-    const blog = await prisma.blog.findMany({ include: { blogReaction: true, comments: true, } });
+    const blog = await prisma.blog.findMany({
+        include: { blogReaction: true, comments: true },
+    });
     console.log(blog);
+    await prisma.savedblogs.delete({
+        where: {
+            userId_blogId: {
+                userId: "",
+                blogId: ""
+            }
+        },
+    });
 });

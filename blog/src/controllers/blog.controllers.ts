@@ -105,7 +105,6 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
 });
 
 
-
 // *************************** //
 // CREATE BLOG CONTROLLER
 // *************************** //
@@ -418,3 +417,4 @@ export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
     cached: false,
   });
 });
+

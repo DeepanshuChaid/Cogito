@@ -19,9 +19,7 @@ redisClient
   .then(() => {
     console.log("Redis connected");
   })
-  .catch(err => console.error("REDIS IS A BITCH MF DID NOT CONNECTED"));
-
-
+  .catch((err) => console.error("REDIS IS A BITCH MF DID NOT CONNECTED"));
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -37,7 +35,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use("/api/blog", isAuthenticatedMiddleware, blogRoutes);
-app.use("/api/comment", isAuthenticatedMiddleware, commentRoutes)
+app.use("/api/comment", isAuthenticatedMiddleware, commentRoutes);
 
 app.use(errorHandler);
 
@@ -45,14 +43,23 @@ app.get("/", (req, res) => {
   res.send("hello world author service");
 });
 
-
 app.listen(PORT, async () => {
   console.log("BLOG Server is running on port " + PORT);
   const data = await prisma.user.findMany();
   console.log(data);
-  
-  const blog = await prisma.blog.findMany({ include: { blogReaction: true, comments: true, } });
-  
-  console.log(blog);
-});
 
+  const blog = await prisma.blog.findMany({
+    include: { blogReaction: true, comments: true },
+  });
+
+  console.log(blog);
+
+  await prisma.savedblogs.delete({
+    where: { 
+      userId_blogId: { 
+        userId: "",
+        blogId: ""
+      } 
+    },
+  });
+});
