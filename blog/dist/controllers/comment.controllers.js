@@ -84,3 +84,29 @@ export const deleteCommentController = asyncHandler(async (req, res) => {
 // *************************** //
 // UPDATE COMMENT CONTROLLER
 // *************************** //
+export const updateCommentController = asyncHandler(async (req, res) => {
+    const blogId = req.params.blogId;
+    const commentId = req.params.id;
+    const userId = req.user?.id;
+    const { comment } = req.body;
+    const blog = await prisma.blog.findUnique({ where: { id: blogId } });
+    if (!blog)
+        throw new Error("Blog not found");
+    const newComment = await prisma.comments.update({
+        where: { id: commentId },
+        data: { comment, isEdited: true }
+    });
+    if (!newComment)
+        throw new Error("Error updating comment");
+    // Invalidate cache for the blog and its comments
+    await invalidateCache([
+        `blog:${blogId}`,
+        `user_blogs:${userId}`,
+        "recommended_blogs:all",
+    ]);
+    await invalidateRecommendedBlogsCache(blog.category);
+    return res.status(200).json({
+        message: "Comment updated successfully",
+        data: newComment
+    });
+});
