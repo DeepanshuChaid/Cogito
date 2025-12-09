@@ -3,58 +3,58 @@ import getBuffer from "../utils/datauri.utils.js";
 import { v2 as cloudinary } from "cloudinary";
 import prisma from "../prisma.js";
 import { redisClient } from "../server.js";
-import { getCachedData, invalidateCache, setCachedData } from "../utils/redis.utils.js";
+import {
+  getCachedData,
+  invalidateCache,
+  setCachedData,
+} from "../utils/redis.utils.js";
 import BLOGCATEGORY from "../enum/blogCategory.enum.js";
-import { invalidateRecommendedBlogsCache } from "../utils/redis.utils.js"
+import { invalidateRecommendedBlogsCache } from "../utils/redis.utils.js";
 
 // *************************** //
 // GET BLOG BY ID CONTROLLER
 // *************************** //
-export const getBlogByIdController = asyncHandler(
-  async (req, res) => {
-    const blogId = req.params.id
-    const userId = req.user?.id
-    const cacheKey = `blog:${blogId}`;
+export const getBlogByIdController = asyncHandler(async (req, res) => {
+  const blogId = req.params.id;
+  const userId = req.user?.id;
+  const cacheKey = `blog:${blogId}`;
 
-    // Try cache first
-    const cached = await redisClient.get(cacheKey);
-    if (cached) {
-      const blog = JSON.parse(cached);
-      const role = blog.authorId === userId ? "author" : "user";
-      return res.status(200).json({
-        message: "Blog fetched successfully",
-        data: blog,
-        role,
-        cached: true
-      });
-    }
-    
-    const blog = await prisma.blog.findUnique({
-      where: {
-        id: blogId
-      }, 
-      include: {
-        blogReaction: true,
-        author: true,
-        comments: true
-      }
-    })
-
-    if (!blog) throw new Error("Blog not found")
-    
-
+  // Try cache first
+  const cached = await redisClient.get(cacheKey);
+  if (cached) {
+    const blog = JSON.parse(cached);
     const role = blog.authorId === userId ? "author" : "user";
-    
-    await setCachedData(`blog:${blogId}`, blog)
-
     return res.status(200).json({
       message: "Blog fetched successfully",
       data: blog,
-      role
-    })
+      role,
+      cached: true,
+    });
   }
-)
 
+  const blog = await prisma.blog.findUnique({
+    where: {
+      id: blogId,
+    },
+    include: {
+      blogReaction: true,
+      author: true,
+      comments: true,
+    },
+  });
+
+  if (!blog) throw new Error("Blog not found");
+
+  const role = blog.authorId === userId ? "author" : "user";
+
+  await setCachedData(`blog:${blogId}`, blog);
+
+  return res.status(200).json({
+    message: "Blog fetched successfully",
+    data: blog,
+    role,
+  });
+});
 
 // *************************** //
 // CREATE BLOG CONTROLLER
@@ -63,7 +63,7 @@ export const createBlogController = asyncHandler(async (req, res) => {
   const { title, description, blogContent, category } = req.body;
 
   if (category && !Object.values(BLOGCATEGORY).includes(category)) {
-    throw new Error("Invalid category")
+    throw new Error("Invalid category");
   }
 
   const file = req.file;
@@ -91,23 +91,24 @@ export const createBlogController = asyncHandler(async (req, res) => {
     },
     include: {
       blogReaction: true,
-      author: true
-    }
+      author: true,
+    },
   });
 
   await invalidateCache([
     `user_blogs:${req.user?.id}`,
-    'recommended_blogs:all',
+    "recommended_blogs:all",
   ]);
 
   await invalidateRecommendedBlogsCache(result.category);
+
+  await setCachedData(`blog:${result.id}`, result);
 
   return res.status(201).json({
     message: "Blog created successfully",
     data: result,
   });
 });
-
 
 // *************************** //
 // UPDATE BLOG CONTROLLER
@@ -159,26 +160,27 @@ export const updateBlogController = asyncHandler(async (req, res) => {
     include: {
       blogReaction: true,
       author: true,
-      comments: true
-    }
+      comments: true,
+    },
   });
 
   const cachesToInvalidate = [
     `blog:${blogId}`,
     `user_blogs:${req.user?.id}`,
-    'recommended_blogs:all',
+    "recommended_blogs:all",
   ];
 
   await invalidateCache(cachesToInvalidate);
 
   await invalidateRecommendedBlogsCache(blog.category);
 
+  await setCachedData(`blog:${blogId}`, result);
+
   return res.status(200).json({
     message: "Blog updated successfully",
     data: result,
   });
 });
-
 
 // *************************** //
 // DELETE BLOG CONTROLLER
@@ -188,9 +190,9 @@ export const deleteBlogController = asyncHandler(async (req, res) => {
 
   const blog = await prisma.blog.findUnique({
     where: {
-      id: blogId
-    }
-  })
+      id: blogId,
+    },
+  });
 
   if (!blog) throw new Error("Blog not found");
 
@@ -199,125 +201,94 @@ export const deleteBlogController = asyncHandler(async (req, res) => {
   }
 
   await prisma.blog.delete({
-    where: { id: blogId }
+    where: { id: blogId },
   });
 
   await invalidateCache([
     `blog:${blogId}`,
     `user_blogs:${req.user?.id}`,
-    'recommended_blogs:all',
+    "recommended_blogs:all",
   ]);
 
   await invalidateRecommendedBlogsCache(blog.category);
 
   return res.status(200).json({
     message: "Blog deleted successfully",
-    data: blog
-  })
+    data: blog,
+  });
 });
-
 
 // *************************** //
 // GET ALL USERS BLOGS CONTROLLER
 // *************************** //
-export const getAllUserBlogsController = asyncHandler(
-  async (req, res) => {
-    const userId = req.user?.id
+export const getAllUserBlogsController = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
 
-    const cacheKey = `user_blogs:${userId}`
-    
-    const cache = await getCachedData(res, cacheKey, "User blogs fetched successfully")
-    if (cache) return
+  const cacheKey = `user_blogs:${userId}`;
 
-    const blogs = await prisma.blog.findMany({
-      where: {
-        authorId: userId
-      }, 
-      include: {
-        author: true
-      }
-    })
+  const cache = await getCachedData(
+    res,
+    cacheKey,
+    "User blogs fetched successfully",
+  );
+  if (cache) return;
 
-    if (!blogs) throw new Error("Error getting Your blogs")
+  const blogs = await prisma.blog.findMany({
+    where: {
+      authorId: userId,
+    },
+    include: {
+      author: true,
+      blogReaction: true,
+      comments: true,
+    },
+  });
 
-    await setCachedData(cacheKey, blogs)
+  if (!blogs) throw new Error("Error getting Your blogs");
 
-    return res.status(200).json({
-      message: "Blogs fetched successfully",
-      data: blogs
-    })
-  }
-)
+  await setCachedData(cacheKey, blogs);
+
+  return res.status(200).json({
+    message: "Blogs fetched successfully",
+    data: blogs,
+  });
+});
+
+
 
 
 // *************************** //
 // GET RECOMMENDED BLOGS CONTROLLER
 // *************************** //
-export const getRecommendedBlogsController = asyncHandler(
-  async (req, res) => {
-    // Get query parameters
-    const category = req.query.category as string | undefined;
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
+  const category = req.query.category as string | undefined;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
 
-    // Validate category
-    if (category && !Object.values(BLOGCATEGORY).includes(category)) {
-      throw new Error("Invalid category");
-    }
+  if (category && !Object.values(BLOGCATEGORY).includes(category)) {
+    throw new Error("Invalid category");
+  }
 
-    // Validate pagination params
-    if (page < 1 || limit < 1 || limit > 100) {
-      throw new Error("Invalid pagination parameters");
-    }
+  if (page < 1 || limit < 1 || limit > 100) {
+    throw new Error("Invalid pagination parameters");
+  }
 
-    // Cache key WITHOUT pagination - we cache the full sorted list
-    const cacheKey = category 
-      ? `recommended_blogs:${category}` 
-      : 'recommended_blogs:all';
+  const cacheKey = category
+    ? `recommended_blogs:${category}`
+    : "recommended_blogs:all";
 
-    // Try to get cached full list
-    let blogsWithScore = await redisClient.get(cacheKey);
+  // ✅ Try cache first with early return
+  const cached = await redisClient.get(cacheKey);
+  if (cached) {
+    const blogsWithScore = JSON.parse(cached);
 
-    if (blogsWithScore) {
-      blogsWithScore = JSON.parse(blogsWithScore);
-    } else {
-      // Fetch from database
-      const blogs = await prisma.blog.findMany({
-        where: {
-          ...(category && {
-            category: { has: category }
-          })
-        },
-        include: {
-          author: true,
-        },
-      });
-
-      // Calculate popularity score: likes - dislikes
-      blogsWithScore = blogs.map(blog => {
-        const likes = blog.blogReaction.filter(r => r.type === 'LIKE').length;
-        const dislikes = blog.blogReaction.filter(r => r.type === 'DISLIKE').length;
-        const score = likes - dislikes;
-        return { ...blog, score };
-      });
-
-      // Sort by popularity descending
-      blogsWithScore.sort((a, b) => b.score - a.score);
-
-      // Cache the FULL sorted result for 5 hours
-      await redisClient.set(cacheKey, JSON.stringify(blogsWithScore), {EX: 5 * 60 * 60});
-    }
-
-    // Apply pagination to the cached/fetched data
+    // Apply pagination
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     const paginatedBlogs = blogsWithScore.slice(startIndex, endIndex);
 
-    // Calculate pagination metadata
     const totalBlogs = blogsWithScore.length;
     const totalPages = Math.ceil(totalBlogs / limit);
-    const hasNextPage = page < totalPages;
-    const hasPrevPage = page > 1;
 
     return res.status(200).json({
       message: "Recommended blogs fetched successfully",
@@ -327,47 +298,69 @@ export const getRecommendedBlogsController = asyncHandler(
         totalPages,
         totalBlogs,
         limit,
-        hasNextPage,
-        hasPrevPage
-      }
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+      cached: true, // ✅ Clear cache indicator
     });
   }
-);
 
-
-
-//  *************************** //
-//  GET BLOGS STATS CONTROLLER
-//  *************************** //
-export const getBlogStatsController = asyncHandler(async (req, res) => {
-  const blogId = req.params.id
-
-  const likes = await prisma.blogReaction.count({
+  // ✅ If no cache, fetch from DB
+  const blogs = await prisma.blog.findMany({
     where: {
-      blogId,
-      type: "LIKE"
-    }
-  })
+      ...(category && {
+        category: { has: category },
+      }),
+    },
+    include: {
+      author: true,
+      blogReaction: true,
+    },
+  });
 
-  const dislikes = await prisma.blogReaction.count({
-    where: {
-      blogId,
-      type: "DISLIKE"
-    }
-  })
+  const blogsWithScore = blogs.map((blog) => {
+    const likes = blog.blogReaction.filter((r) => r.type === "LIKE").length;
+    const dislikes = blog.blogReaction.filter((r) => r.type === "DISLIKE").length;
+    const comments = blog.comments.length || 0
+    const views = blog.views || 0
 
-  const comments = await prisma.comments.count({
-    where: {
-      blogId
-    }
-  })
+    const engagementScore = (likes * 2) + (dislikes * -1) + (comments * 1.5) + (views * 0.5)
+
+    const hoursSincePosted = (Date.now() - new Date(blog.createdAt).getTime()) / (1000 * 60 * 60);
+
+    const recency = 1 / (hoursSincePosted + 6)
+
+    const score = engagementScore * recency
+
+    return { ...blog, score };
+  });
+
+  blogsWithScore.sort((a, b) => b.score - a.score);
+
+  // Cache for 5 hours
+  await redisClient.set(cacheKey, JSON.stringify(blogsWithScore), {
+    EX: 5 * 60 * 60,
+  });
+
+  // Apply pagination
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedBlogs = blogsWithScore.slice(startIndex, endIndex);
+
+  const totalBlogs = blogsWithScore.length;
+  const totalPages = Math.ceil(totalBlogs / limit);
 
   return res.status(200).json({
-    message: "Blog stats fetched successfully",
-    data: {
-      likes,
-      dislikes,
-      comments
-    }
-  })
-})
+    message: "Recommended blogs fetched successfully",
+    data: paginatedBlogs,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalBlogs,
+      limit,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    },
+    cached: false,
+  });
+});

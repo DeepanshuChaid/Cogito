@@ -36,45 +36,11 @@ export const createCommentController = asyncHandler(async (req, res) => {
   });
 });
 
-// *************************** //
-// GET ALL COMMENTS OF BLOGS CONTROLLER
-// *************************** //
-export const getAllCommentsInBlogController = asyncHandler(async (req, res) => {
-  const blogId = req.params.blogId;
-
-  const cacheKey = `blog_comments:${blogId}`;
-
-  const cache = await getCachedData(
-    res,
-    cacheKey,
-    "Comments fetched successfully",
-  );
-  if (cache) return;
-
-  const comments = await prisma.comments.findMany({
-    where: {
-      blogId,
-    },
-    include: {
-      replies: true,
-    },
-  });
-
-  if (!comments) throw new Error("Error getting comments");
-
-  await setCachedData(cacheKey, comments);
-
-  return res.status(200).json({
-    message: "Comments fetched successfully",
-    data: comments,
-  });
-});
-
 
 // *************************** //
 // DELETE COMMENTS IN A BLOGS CONTROLLER
 // *************************** //
-export const deleteCommentController = asynchHandler(async (req, res) => {
+export const deleteCommentController = asyncHandler(async (req, res) => {
   const blogId = req.params.blogId;
   const commentId = req.params.id;
   const userId = req.user?.id
@@ -102,6 +68,9 @@ export const deleteCommentController = asynchHandler(async (req, res) => {
   }
 
   await prisma.comments.delete({where: {id: commentId}})
+
+   // Invalidate cache for the blog and its comments
+   
   
   return res.status(200).json({
     message: "Comment deleted successfully"
