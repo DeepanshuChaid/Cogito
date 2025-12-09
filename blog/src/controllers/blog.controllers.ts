@@ -11,31 +11,52 @@ import {
 import BLOGCATEGORY from "../enum/blogCategory.enum.js";
 import { invalidateRecommendedBlogsCache } from "../utils/redis.utils.js";
 
+
 // *************************** //
 // GET BLOG BY ID CONTROLLER
 // *************************** //
 export const getBlogByIdController = asyncHandler(async (req, res) => {
   const blogId = req.params.id;
-  const userId = req.user?.id;
+  const userId = req.user.id;
   const cacheKey = `blog:${blogId}`;
+  const viewKey = `blog:${blogId}:user:${userId}`;
 
-  // Try cache first
-  const cached = await redisClient.get(cacheKey);
-  if (cached) {
-    const blog = JSON.parse(cached);
+  // First: check cache
+  const cachedBlog = await redisClient.get(cacheKey);
+
+  if (cachedBlog) {
+    const blog = JSON.parse(cachedBlog);
+
+    // Try to increment view WITHOUT invalidating cache
+    const viewed = await redisClient.set(viewKey, "1", {
+      NX: true,
+      EX: 60 * 30,
+    });
+
+    if (viewed) {
+      // increment view count in DB
+      await prisma.blog.update({
+        where: { id: blogId },
+        data: { views: { increment: 1 } },
+      });
+
+      // Update cached blog view count directly
+      blog.views += 1;
+      await redisClient.set(cacheKey, JSON.stringify(blog), { EX: 60 * 60 * 5 });
+    }
+
     const role = blog.authorId === userId ? "author" : "user";
     return res.status(200).json({
+      cached: true,
       message: "Blog fetched successfully",
       data: blog,
       role,
-      cached: true,
     });
   }
 
-  const blog = await prisma.blog.findUnique({
-    where: {
-      id: blogId,
-    },
+  // Not cached → fetch from DB
+  let blog = await prisma.blog.findUnique({
+    where: { id: blogId },
     include: {
       blogReaction: true,
       author: true,
@@ -45,16 +66,45 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
 
   if (!blog) throw new Error("Blog not found");
 
+  // Cache it now
+  await redisClient.set(cacheKey, JSON.stringify(blog), {
+    EX: 60 * 60 * 5,
+  });
+
+  // Try to increment view
+  const viewed = await redisClient.set(viewKey, "1", {
+    NX: true,
+    EX: 60 * 30,
+  });
+
+  if (viewed) {
+    blog = await prisma.blog.update({
+      where: { id: blogId },
+      data: { views: { increment: 1 } },
+      include: {
+        blogReaction: true,
+        author: true,
+        comments: true,
+      },
+    });
+
+    // Update cache again
+    await redisClient.set(cacheKey, JSON.stringify(blog), {
+      EX: 60 * 60 * 5,
+    });
+  }
+
   const role = blog.authorId === userId ? "author" : "user";
 
-  await setCachedData(`blog:${blogId}`, blog);
-
   return res.status(200).json({
+    cached: false,
     message: "Blog fetched successfully",
     data: blog,
     role,
   });
 });
+
+
 
 // *************************** //
 // CREATE BLOG CONTROLLER
@@ -172,7 +222,7 @@ export const updateBlogController = asyncHandler(async (req, res) => {
 
   await invalidateCache(cachesToInvalidate);
 
-  await invalidateRecommendedBlogsCache(blog.category);
+  await invalidateRecommendedBlogsCache(result.category);
 
   await setCachedData(`blog:${blogId}`, result);
 
@@ -254,9 +304,6 @@ export const getAllUserBlogsController = asyncHandler(async (req, res) => {
   });
 });
 
-
-
-
 // *************************** //
 // GET RECOMMENDED BLOGS CONTROLLER
 // *************************** //
@@ -315,22 +362,29 @@ export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
     include: {
       author: true,
       blogReaction: true,
+      comments: true,
     },
   });
 
   const blogsWithScore = blogs.map((blog) => {
     const likes = blog.blogReaction.filter((r) => r.type === "LIKE").length;
-    const dislikes = blog.blogReaction.filter((r) => r.type === "DISLIKE").length;
-    const comments = blog.comments.length || 0
-    const views = blog.views || 0
+    const dislikes = blog.blogReaction.filter(
+      (r) => r.type === "DISLIKE",
+    ).length;
+    const comments = blog.comments.length || 0;
+    const views = blog.views || 0;
 
-    const engagementScore = (likes * 2) + (dislikes * -1) + (comments * 1.5) + (views * 0.5)
+    const engagementScore =
+      likes * 3 +
+      comments * 5 +
+      views * 0.2 -
+      dislikes;
 
     const hoursSincePosted = (Date.now() - new Date(blog.createdAt).getTime()) / (1000 * 60 * 60);
+    const recency =
+      1 / Math.pow(hoursSincePosted + 8, 1.3);
 
-    const recency = 1 / (hoursSincePosted + 6)
-
-    const score = engagementScore * recency
+    const score = engagementScore * recency;
 
     return { ...blog, score };
   });
