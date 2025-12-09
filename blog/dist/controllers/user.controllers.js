@@ -43,6 +43,17 @@ export const deleteSavedBlogController = asyncHandler(async (req, res) => {
     if (!blog)
         throw new Error("Blog not found");
     const savedBlog = await prisma.savedblogs.delete({
-        where: { userId_blogId: { userId, blogId } }
+        where: {
+            userId_blogId: {
+                userId,
+                blogId,
+            },
+        },
+    });
+    if (!savedBlog)
+        throw new Error("Blog not found in saved blogs");
+    return res.status(200).json({
+        message: "Blog removed from saved blogs successfully",
+        data: savedBlog
     });
 });

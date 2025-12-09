@@ -2,6 +2,7 @@ import express from "express";
 import prisma from "./prisma.js";
 import blogRoutes from "./routes/blog.routes.js";
 import commentRoutes from "./routes/comment.routes.js";
+import userRoutes from "./routes/user.routes.js";
 import { errorHandler } from "./middlewares/errorHandlerMiddleware.js";
 import { v2 as cloudinary } from "cloudinary";
 import "dotenv/config";
@@ -30,6 +31,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/api/blog", isAuthenticatedMiddleware, blogRoutes);
 app.use("/api/comment", isAuthenticatedMiddleware, commentRoutes);
+app.use("/api/user", isAuthenticatedMiddleware, userRoutes);
 app.use(errorHandler);
 app.get("/", (req, res) => {
     res.send("hello world author service");
@@ -42,12 +44,4 @@ app.listen(PORT, async () => {
         include: { blogReaction: true, comments: true },
     });
     console.log(blog);
-    await prisma.savedblogs.delete({
-        where: {
-            userId_blogId: {
-                userId: "",
-                blogId: ""
-            }
-        },
-    });
 });
