@@ -61,7 +61,9 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
     include: {
       blogReaction: true,
       author: true,
-      comments: true,
+      _count: {
+        select: {comments: true}
+      },
     },
   });
 
@@ -85,7 +87,9 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
       include: {
         blogReaction: true,
         author: true,
-        comments: true,
+        _count: {
+
+        select: {comments: true}},
       },
     });
 
@@ -209,7 +213,9 @@ export const updateBlogController = asyncHandler(async (req, res) => {
     include: {
       blogReaction: true,
       author: true,
-      comments: true,
+      _count: {
+        select: {comments: true}
+      },
     },
   });
 
@@ -289,7 +295,9 @@ export const getAllUserBlogsController = asyncHandler(async (req, res) => {
     include: {
       author: true,
       blogReaction: true,
-      comments: true,
+      _count: {
+        select: {comments: true}
+      },
     },
   });
 
@@ -307,109 +315,92 @@ export const getAllUserBlogsController = asyncHandler(async (req, res) => {
 // GET RECOMMENDED BLOGS CONTROLLER
 // *************************** //
 export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
-  const category = req.body.category;
+  const categories = req.body.category; // array of categories
   const page = req.query.page ? parseInt(req.query.page as string) : 1;
   const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
 
-  if (category && !Object.values(BLOGCATEGORY).includes(category as string)) {
-    throw new Error("Invalid category");
-  }
+  const cacheKey = categories
+    ? `recommended_blogs:${categories.join(',')}:${page}`
+    : `recommended_blogs:all:${page}`;
 
-  const cacheKey = category
-    ? `recommended_blogs:${category}`
-    : "recommended_blogs:all";
-
-  // First try cache
+  // Try cache first
   const cached = await redisClient.get(cacheKey);
   if (cached) {
-    const blogs = JSON.parse(cached);
-
-    const start = (page - 1) * limit;
-    const paginated = blogs.slice(start, start + limit);
-
+    const paginatedBlogs = JSON.parse(cached);
     return res.status(200).json({
       cached: true,
       message: "Recommended blogs fetched",
-      data: paginated,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(blogs.length / limit),
-        totalBlogs: blogs.length,
-        limit,
-      },
+      data: paginatedBlogs.data,
+      pagination: paginatedBlogs.pagination,
     });
   }
 
-  // No cache → fetch from DB
+  // DB query with skip & take for pagination
+  const skip = (page - 1) * limit;
+
+  // Fetch total count for pagination metadata
+  const totalBlogs = await prisma.blog.count({
+    where: categories ? { category: { hasSome: categories } } : {},
+  });
+
   const blogs = await prisma.blog.findMany({
-    where: category ? { category: { hasSome: category } } : {},
+    where: categories ? { category: { hasSome: categories } } : {},
     include: {
       author: true,
       blogReaction: true,
-      comments: true,
+      _count: { select: { comments: true } },
     },
+    orderBy: { createdAt: 'desc' }, // we can still adjust later for engagement score
+    skip,
+    take: limit,
   });
 
-  const blogsWithScore = blogs.map((blog) => {
-    const likes = blog.blogReaction.filter((r) => r.type === "LIKE").length;
-    const dislikes = blog.blogReaction.filter(
-      (r) => r.type === "DISLIKE",
-    ).length;
-    const comments = blog.comments.length;
+  // Optional: compute engagement score per blog if you want ranking
+  const blogsWithScore = blogs.map(blog => {
+    const likes = blog.blogReaction.filter(r => r.type === 'LIKE').length;
+    const dislikes = blog.blogReaction.filter(r => r.type === 'DISLIKE').length;
+    const comments = blog._count.comments;
     const views = blog.views || 0;
     const shares = blog.shares || 0;
 
-    // Clean, readable engagement formula
-    const engagementScore =
-      likes * 4 + comments * 6 + shares * 10 + views * 0.15 - dislikes * 3;
-
-    // Recency boost
-    const hoursPassed =
-      (Date.now() - new Date(blog.createdAt).getTime()) / (1000 * 60 * 60);
-    const recencyBoost = 1 / (1 + hoursPassed / 12);
-
+    const engagementScore = likes*4 + comments*6 + shares*10 + views*0.15 - dislikes*3;
+    const hoursPassed = (Date.now() - new Date(blog.createdAt).getTime()) / 36e5;
+    const recencyBoost = 1 / (1 + hoursPassed/12);
     const score = engagementScore * recencyBoost;
 
     return { ...blog, score };
   });
 
+  // Sort paginated slice by score
   blogsWithScore.sort((a, b) => b.score - a.score);
 
-  // 🔥 NEW: Cache each blog individually
-  for (const blog of blogsWithScore) {
-    const key = `blog:${blog.id}`;
-    await redisClient.set(key, JSON.stringify(blog), { EX: 60 * 60 * 5 });
-  }
+  // Prepare pagination metadata
+  const pagination = {
+    currentPage: page,
+    totalPages: Math.ceil(totalBlogs / limit),
+    totalBlogs,
+    limit,
+  };
 
-  // Cache entire recommended list
-  await redisClient.set(cacheKey, JSON.stringify(blogsWithScore), {
-    EX: 60 * 60 * 5,
-  });
-
-  // Pagination
-  const startIndex = (page - 1) * limit;
-  const paginatedBlogs = blogsWithScore.slice(startIndex, startIndex + limit);
+  // Cache paginated result only
+  await redisClient.set(cacheKey, JSON.stringify({ data: blogsWithScore, pagination }), { EX: 60*60*5 });
 
   return res.status(200).json({
     cached: false,
     message: "Recommended blogs fetched",
-    data: paginatedBlogs,
-    pagination: {
-      currentPage: page,
-      totalPages: Math.ceil(blogsWithScore.length / limit),
-      totalBlogs: blogsWithScore.length,
-      limit,
-    },
+    data: blogsWithScore,
+    pagination,
   });
 });
+
 
 // *************************** //
 // SEARCH BLOGS CONTROLLER (FIXED)
 // *************************** //
 export const searchBlogsController = asyncHandler(async (req, res) => {
   const query = req.query.search?.trim();
-  const page = req.query.page ? parseInt(req.query.page) : 1;
-  const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+  const page = req.query.page ? parseInt(req.query.page as string) : 1;
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
 
   if (!query || query.length < 2) {
     return res.status(400).json({ message: "Search query too short" });
@@ -441,7 +432,9 @@ export const searchBlogsController = asyncHandler(async (req, res) => {
     include: {
       author: true,
       blogReaction: true,
-      comments: true,
+      _count: {
+        select: {comments: true}
+      },
     },
   });
 
@@ -490,3 +483,6 @@ export const searchBlogsController = asyncHandler(async (req, res) => {
     },
   });
 });
+
+
+
