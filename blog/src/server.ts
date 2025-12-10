@@ -51,6 +51,7 @@ app.listen(PORT, async () => {
   console.log(data);
 
   const blog = await prisma.blog.findMany({
+    where: { category: { hasSome: ["SEX_EDUCATION"] } },
     include: { blogReaction: true, comments: true },
   });
 

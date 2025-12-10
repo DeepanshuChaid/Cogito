@@ -7,6 +7,7 @@ import {
   getAllUserBlogsController,
   getBlogByIdController,
   getRecommendedBlogsController,
+  searchBlogsController
 } from "../controllers/blog.controllers.js";
 import {
   likeBlogController,
@@ -14,6 +15,8 @@ import {
 } from "../controllers/reaction.controllers.js";
 
 const blogRoutes = Router();
+
+blogRoutes.get("/search", searchBlogsController)
 
 blogRoutes.get("/get/:id", getBlogByIdController);
 

@@ -11,7 +11,7 @@ import { invalidateRecommendedBlogsCache } from "../utils/redis.utils.js";
 // *************************** //
 export const getBlogByIdController = asyncHandler(async (req, res) => {
     const blogId = req.params.id;
-    const userId = req.user.id;
+    const userId = req.user?.id;
     const cacheKey = `blog:${blogId}`;
     const viewKey = `blog:${blogId}:user:${userId}`;
     // First: check cache
@@ -31,7 +31,9 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
             });
             // Update cached blog view count directly
             blog.views += 1;
-            await redisClient.set(cacheKey, JSON.stringify(blog), { EX: 60 * 60 * 5 });
+            await redisClient.set(cacheKey, JSON.stringify(blog), {
+                EX: 60 * 60 * 5,
+            });
         }
         const role = blog.authorId === userId ? "author" : "user";
         return res.status(200).json({
@@ -244,49 +246,36 @@ export const getAllUserBlogsController = asyncHandler(async (req, res) => {
 // GET RECOMMENDED BLOGS CONTROLLER
 // *************************** //
 export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
-    const category = req.query.category;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const category = req.body.category;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit) : 10;
     if (category && !Object.values(BLOGCATEGORY).includes(category)) {
         throw new Error("Invalid category");
-    }
-    if (page < 1 || limit < 1 || limit > 100) {
-        throw new Error("Invalid pagination parameters");
     }
     const cacheKey = category
         ? `recommended_blogs:${category}`
         : "recommended_blogs:all";
-    // ✅ Try cache first with early return
+    // First try cache
     const cached = await redisClient.get(cacheKey);
     if (cached) {
-        const blogsWithScore = JSON.parse(cached);
-        // Apply pagination
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
-        const paginatedBlogs = blogsWithScore.slice(startIndex, endIndex);
-        const totalBlogs = blogsWithScore.length;
-        const totalPages = Math.ceil(totalBlogs / limit);
+        const blogs = JSON.parse(cached);
+        const start = (page - 1) * limit;
+        const paginated = blogs.slice(start, start + limit);
         return res.status(200).json({
-            message: "Recommended blogs fetched successfully",
-            data: paginatedBlogs,
+            cached: true,
+            message: "Recommended blogs fetched",
+            data: paginated,
             pagination: {
                 currentPage: page,
-                totalPages,
-                totalBlogs,
+                totalPages: Math.ceil(blogs.length / limit),
+                totalBlogs: blogs.length,
                 limit,
-                hasNextPage: page < totalPages,
-                hasPrevPage: page > 1,
             },
-            cached: true, // ✅ Clear cache indicator
         });
     }
-    // ✅ If no cache, fetch from DB
+    // No cache → fetch from DB
     const blogs = await prisma.blog.findMany({
-        where: {
-            ...(category && {
-                category: { has: category },
-            }),
-        },
+        where: category ? { category: { hasSome: category } } : {},
         include: {
             author: true,
             blogReaction: true,
@@ -296,39 +285,105 @@ export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
     const blogsWithScore = blogs.map((blog) => {
         const likes = blog.blogReaction.filter((r) => r.type === "LIKE").length;
         const dislikes = blog.blogReaction.filter((r) => r.type === "DISLIKE").length;
-        const comments = blog.comments.length || 0;
+        const comments = blog.comments.length;
         const views = blog.views || 0;
-        const engagementScore = likes * 3 +
-            comments * 5 +
-            views * 0.2 -
-            dislikes;
-        const hoursSincePosted = (Date.now() - new Date(blog.createdAt).getTime()) / (1000 * 60 * 60);
-        const recency = 1 / Math.pow(hoursSincePosted + 8, 1.3);
-        const score = engagementScore * recency;
+        const shares = blog.shares || 0;
+        // Clean, readable engagement formula
+        const engagementScore = likes * 4 + comments * 6 + shares * 10 + views * 0.15 - dislikes * 3;
+        // Recency boost
+        const hoursPassed = (Date.now() - new Date(blog.createdAt).getTime()) / (1000 * 60 * 60);
+        const recencyBoost = 1 / (1 + hoursPassed / 12);
+        const score = engagementScore * recencyBoost;
         return { ...blog, score };
     });
     blogsWithScore.sort((a, b) => b.score - a.score);
-    // Cache for 5 hours
+    // 🔥 NEW: Cache each blog individually
+    for (const blog of blogsWithScore) {
+        const key = `blog:${blog.id}`;
+        await redisClient.set(key, JSON.stringify(blog), { EX: 60 * 60 * 5 });
+    }
+    // Cache entire recommended list
     await redisClient.set(cacheKey, JSON.stringify(blogsWithScore), {
-        EX: 5 * 60 * 60,
+        EX: 60 * 60 * 5,
     });
-    // Apply pagination
+    // Pagination
     const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedBlogs = blogsWithScore.slice(startIndex, endIndex);
-    const totalBlogs = blogsWithScore.length;
-    const totalPages = Math.ceil(totalBlogs / limit);
+    const paginatedBlogs = blogsWithScore.slice(startIndex, startIndex + limit);
     return res.status(200).json({
-        message: "Recommended blogs fetched successfully",
+        cached: false,
+        message: "Recommended blogs fetched",
         data: paginatedBlogs,
         pagination: {
             currentPage: page,
-            totalPages,
-            totalBlogs,
+            totalPages: Math.ceil(blogsWithScore.length / limit),
+            totalBlogs: blogsWithScore.length,
             limit,
-            hasNextPage: page < totalPages,
-            hasPrevPage: page > 1,
         },
-        cached: false,
+    });
+});
+// *************************** //
+// SEARCH BLOGS CONTROLLER (FIXED)
+// *************************** //
+export const searchBlogsController = asyncHandler(async (req, res) => {
+    const query = req.query.search?.trim();
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+    if (!query || query.length < 2) {
+        return res.status(400).json({ message: "Search query too short" });
+    }
+    const search = query.toLowerCase();
+    // Match categories by fuzzy search — SAFE for Prisma enum
+    const matchingCategories = Object.values(BLOGCATEGORY).filter((cat) => cat.toLowerCase().includes(search));
+    // Build OR filters safely
+    const ORconditions = [
+        { title: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+        { blogContent: { contains: search, mode: "insensitive" } },
+    ];
+    if (matchingCategories.length > 0) {
+        ORconditions.push({
+            category: { hasSome: matchingCategories },
+        });
+    }
+    // Fetch from DB
+    const blogs = await prisma.blog.findMany({
+        where: { OR: ORconditions },
+        include: {
+            author: true,
+            blogReaction: true,
+            comments: true,
+        },
+    });
+    // Score (YouTube-style relevance ranking)
+    const ranked = blogs.map((blog) => {
+        const likes = blog.blogReaction.filter((r) => r.type === "LIKE").length;
+        const dislikes = blog.blogReaction.filter((r) => r.type === "DISLIKE").length;
+        const commentsCount = blog.comments.length;
+        const views = blog.views || 0;
+        const shares = blog.shares || 0;
+        const engagement = likes * 5 + commentsCount * 6 + shares * 10 + views * 0.2 - dislikes * 3;
+        const titleBoost = blog.title.toLowerCase().includes(search) ? 1.8 : 1.0;
+        const hoursAgo = (Date.now() - new Date(blog.createdAt).getTime()) / 36e5;
+        const recencyBoost = 1 / (1 + hoursAgo / 16);
+        const relevanceBoost = matchingCategories.includes(blog.category)
+            ? 2.5
+            : 1.0;
+        const score = engagement * recencyBoost * titleBoost * relevanceBoost;
+        return { ...blog, score };
+    });
+    ranked.sort((a, b) => b.score - a.score);
+    // Pagination
+    const start = (page - 1) * limit;
+    const paginated = ranked.slice(start, start + limit);
+    return res.status(200).json({
+        message: "Search results",
+        query,
+        totalResults: ranked.length,
+        data: paginated,
+        pagination: {
+            currentPage: page,
+            totalPages: Math.ceil(ranked.length / limit),
+            limit,
+        },
     });
 });
