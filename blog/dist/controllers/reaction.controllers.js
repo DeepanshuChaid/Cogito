@@ -1,6 +1,7 @@
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
 import { invalidateCache } from "../utils/redis.utils.js";
+import { invalidateRecommendedBlogsCache } from "./blog.controllers.js";
 // *************************** //
 // LIKE BLOG CONTROLLER (IMPROVED)
 // *************************** //
@@ -43,8 +44,8 @@ export const likeBlogController = asyncHandler(async (req, res) => {
     await invalidateCache([
         `blog:${blogId}`,
         'recommended_blogs:*',
-        ...blog.category.map(cat => `category:${cat}:*`) // Invalidate all category caches
     ]);
+    invalidateRecommendedBlogsCache(blog.category);
     return res.status(200).json({
         message: "Blog liked successfully"
     });
@@ -91,8 +92,8 @@ export const dislikeBlogController = asyncHandler(async (req, res) => {
     await invalidateCache([
         `blog:${blogId}`,
         'recommended_blogs:*',
-        ...blog.category.map(cat => `category:${cat}:*`) // Invalidate all category caches
     ]);
+    invalidateRecommendedBlogsCache(blog.category);
     return res.status(200).json({
         message: "Blog disliked successfully"
     });

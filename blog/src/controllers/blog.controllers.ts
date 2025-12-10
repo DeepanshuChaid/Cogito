@@ -153,7 +153,8 @@ export const createBlogController = asyncHandler(async (req, res) => {
     "recommended_blogs:all",
   ]);
 
-  await invalidateRecommendedBlogsCache(result.category);
+
+  await invalidateRecommendedBlogsCache(result.category); // create / update
 
   await setCachedData(`blog:${result.id}`, result);
 
@@ -222,12 +223,12 @@ export const updateBlogController = asyncHandler(async (req, res) => {
   const cachesToInvalidate = [
     `blog:${blogId}`,
     `user_blogs:${req.user?.id}`,
-    "recommended_blogs:all",
+    "recommended_blogs:all*",
   ];
 
   await invalidateCache(cachesToInvalidate);
 
-  await invalidateRecommendedBlogsCache(result.category);
+  invalidateRecommendedBlogsCache(result.category); // delete
 
   await setCachedData(`blog:${blogId}`, result);
 
@@ -262,10 +263,10 @@ export const deleteBlogController = asyncHandler(async (req, res) => {
   await invalidateCache([
     `blog:${blogId}`,
     `user_blogs:${req.user?.id}`,
-    "recommended_blogs:all",
+    "recommended_blogs:all*",
   ]);
 
-  await invalidateRecommendedBlogsCache(blog.category);
+  invalidateRecommendedBlogsCache(blog.category); // delete
 
   return res.status(200).json({
     message: "Blog deleted successfully",
@@ -354,8 +355,14 @@ export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
     skip,
     take: limit,
   });
+  
 
-  // Optional: compute engagement score per blog if you want ranking
+  // CACHING THE BLOGS
+  for (const blog of blogs) {
+    await redisClient.set(`blog:${blog.id}`, JSON.stringify(blog), { EX: 60*60*5 });
+  }
+  // *************************** //
+
   const blogsWithScore = blogs.map(blog => {
     const likes = blog.blogReaction.filter(r => r.type === 'LIKE').length;
     const dislikes = blog.blogReaction.filter(r => r.type === 'DISLIKE').length;

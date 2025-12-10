@@ -38,10 +38,10 @@ export const createCommentController = asyncHandler(async (req, res) => {
   await invalidateCache([
     `blog:${blogId}`,
     `user_blogs:${userId}`,
-    "recommended_blogs:all",
-  ]);
+    "recommended_blogs:all:*",
+  ]);:*
 
-  await invalidateRecommendedBlogsCache(blog.category);
+  invalidateRecommendedBlogsCache(blog.category);
 
   return res.status(201).json({
     message: "Comment created successfully",
@@ -78,7 +78,7 @@ export const deleteCommentController = asyncHandler(async (req, res) => {
   await invalidateCache([
     `blog:${blogId}`,
     `user_blogs:${userId}`,
-    "recommended_blogs:all",
+    "recommended_blogs:all:*",
   ]);
 
   await invalidateRecommendedBlogsCache(blog.category);
@@ -121,7 +121,7 @@ export const updateCommentController = asyncHandler(async (req, res) => {
   await invalidateCache([
     `blog:${blogId}`,
     `user_blogs:${userId}`,
-    "recommended_blogs:all",
+    "recommended_blogs:all:*",
   ]);
 
   await invalidateRecommendedBlogsCache(blog.category);
