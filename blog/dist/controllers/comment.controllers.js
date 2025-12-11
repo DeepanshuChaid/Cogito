@@ -25,10 +25,7 @@ export const createCommentController = asyncHandler(async (req, res) => {
     });
     if (!newComment)
         throw new Error("Error creating comment");
-    await invalidateCache([
-        `blog:${blogId}`,
-        `user_blogs:${userId}`,
-    ]);
+    await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
     return res.status(201).json({
         message: "Comment created successfully",
         data: newComment,
@@ -55,11 +52,7 @@ export const deleteCommentController = asyncHandler(async (req, res) => {
     }
     await prisma.comments.delete({ where: { id: commentId } });
     // Invalidate cache for the blog and its comments
-    await invalidateCache([
-        `blog:${blogId}`,
-        `user_blogs:${userId}`,
-        "recommended_blogs:all:*",
-    ]);
+    await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
     await invalidateRecommendedBlogsCache(blog.category);
     return res.status(200).json({
         message: "Comment deleted successfully",
@@ -91,14 +84,41 @@ export const updateCommentController = asyncHandler(async (req, res) => {
         where: { id: commentId },
         data: { comment, isEdited: true },
     });
-    await invalidateCache([
-        `blog:${blogId}`,
-        `user_blogs:${userId}`,
-        "recommended_blogs:all:*",
-    ]);
+    await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
     await invalidateRecommendedBlogsCache(blog.category);
     return res.status(200).json({
         message: "Comment updated successfully",
         data: updatedComment,
+    });
+});
+//  *************************** //
+//  GET COMMENTS CONTROLLER
+//  *************************** //
+export const getCommentsController = asyncHandler(async (req, res) => {
+    const blogId = req.params.blogId;
+    const userId = req.user?.id;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+    const skip = (page - 1) * limit;
+    const blog = await prisma.blog.findFirst({
+        where: { id: blogId },
+    });
+    if (!blog)
+        throw new Error("Blog not found");
+    const comments = await prisma.comments.findMany({
+        where: { blogId },
+        include: {
+            user: true,
+            replies: true,
+        },
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+    });
+    if (!comments)
+        throw new Error("No comments found");
+    return res.status(200).json({
+        message: "Comments fetched successfully",
+        data: comments,
     });
 });
