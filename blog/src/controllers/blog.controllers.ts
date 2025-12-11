@@ -17,36 +17,36 @@ import { invalidateRecommendedBlogsCache } from "../utils/redis.utils.js";
 export const getBlogByIdController = asyncHandler(async (req, res) => {
   const blogId = req.params.id;
   const userId = req.user?.id;
+
   const cacheKey = `blog:${blogId}`;
   const viewKey = `blog:${blogId}:user:${userId}`;
 
-  // First: check cache
-  const cachedBlog = await redisClient.get(cacheKey);
+  // 1) Check cache first (fastest path)
+  const cached = await redisClient.get(cacheKey);
 
-  if (cachedBlog) {
-    const blog = JSON.parse(cachedBlog);
+  if (cached) {
+    const blog = JSON.parse(cached);
 
-    // Try to increment view WITHOUT invalidating cache
     const viewed = await redisClient.set(viewKey, "1", {
       NX: true,
-      EX: 60 * 30,
+      EX: 1800, // 30 min
     });
 
     if (viewed) {
-      // increment view count in DB
+      // Increment DB views async
       await prisma.blog.update({
         where: { id: blogId },
         data: { views: { increment: 1 } },
       });
 
-      // Update cached blog view count directly
+      // Update cached object without refetch
       blog.views += 1;
-      await redisClient.set(cacheKey, JSON.stringify(blog), {
-        EX: 60 * 60 * 5,
-      });
+
+      await redisClient.set(cacheKey, JSON.stringify(blog), { EX: 18000 });
     }
 
     const role = blog.authorId === userId ? "author" : "user";
+
     return res.status(200).json({
       cached: true,
       message: "Blog fetched successfully",
@@ -55,48 +55,52 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
     });
   }
 
-  // Not cached → fetch from DB
+  // 2) Fetch fresh from DB using OPTIMIZED include
   let blog = await prisma.blog.findUnique({
     where: { id: blogId },
     include: {
-      blogReaction: true,
       author: true,
+      blogReaction: {
+        select: {
+          type: true,
+        },
+      },
       _count: {
-        select: {comments: true}
+        select: { comments: true },
       },
     },
   });
 
   if (!blog) throw new Error("Blog not found");
 
-  // Cache it now
-  await redisClient.set(cacheKey, JSON.stringify(blog), {
-    EX: 60 * 60 * 5,
-  });
+  // Cache it
+  await redisClient.set(cacheKey, JSON.stringify(blog), { EX: 18000 });
 
-  // Try to increment view
+  // 3) Unique view logic
   const viewed = await redisClient.set(viewKey, "1", {
     NX: true,
-    EX: 60 * 30,
+    EX: 1800,
   });
 
   if (viewed) {
+    // increment + return updated fields IN ONE HIT
     blog = await prisma.blog.update({
       where: { id: blogId },
       data: { views: { increment: 1 } },
       include: {
-        blogReaction: true,
         author: true,
+        blogReaction: {
+          select: {
+            type: true,
+          },
+        },
         _count: {
-
-        select: {comments: true}},
+          select: { comments: true },
+        },
       },
     });
 
-    // Update cache again
-    await redisClient.set(cacheKey, JSON.stringify(blog), {
-      EX: 60 * 60 * 5,
-    });
+    await redisClient.set(cacheKey, JSON.stringify(blog), { EX: 18000 });
   }
 
   const role = blog.authorId === userId ? "author" : "user";
@@ -108,6 +112,7 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
     role,
   });
 });
+
 
 // *************************** //
 // CREATE BLOG CONTROLLER
@@ -143,7 +148,6 @@ export const createBlogController = asyncHandler(async (req, res) => {
       author: { connect: { id: req.user?.id } },
     },
     include: {
-      blogReaction: true,
       author: true,
     },
   });
@@ -197,9 +201,6 @@ export const updateBlogController = asyncHandler(async (req, res) => {
   }
 
   const result = await prisma.blog.update({
-    where: {
-      id: blogId,
-    },
     data: {
       title,
       description,
@@ -207,11 +208,16 @@ export const updateBlogController = asyncHandler(async (req, res) => {
       category,
       image: imageUrl,
     },
+    where: { id: blogId },
     include: {
-      blogReaction: true,
       author: true,
+      blogReaction: {
+        select: {
+          type: true,
+        },
+      },
       _count: {
-        select: {comments: true}
+        select: { comments: true },
       },
     },
   });
@@ -344,9 +350,13 @@ export const getAllUserBlogsController = asyncHandler(async (req, res) => {
     },
     include: {
       author: true,
-      blogReaction: true,
+      blogReaction: {
+        select: {
+          type: true,
+        },
+      },
       _count: {
-        select: {comments: true}
+        select: { comments: true },
       },
     },
   });
@@ -362,13 +372,16 @@ export const getAllUserBlogsController = asyncHandler(async (req, res) => {
 });
 
 
+
 // *************************** //
 // SEARCH BLOGS CONTROLLER (FIXED)
 // *************************** //
 export const searchBlogsController = asyncHandler(async (req, res) => {
   const query = req.query.search?.trim();
-  const page = req.query.page ? parseInt(req.query.page as string) : 1;
-  const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+  const page = req.query.page ? parseInt(req.query.page) : 1;
+  const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+
+  const skip = (page - 1) * limit
 
   if (!query || query.length < 2) {
     return res.status(400).json({ message: "Search query too short" });
@@ -376,12 +389,12 @@ export const searchBlogsController = asyncHandler(async (req, res) => {
 
   const search = query.toLowerCase();
 
-  // Match categories by fuzzy search — SAFE for Prisma enum
+  // Match categories — safe because it's enum
   const matchingCategories = Object.values(BLOGCATEGORY).filter((cat) =>
-    cat.toLowerCase().includes(search),
+    cat.toLowerCase().includes(search)
   );
 
-  // Build OR filters safely
+  // OR conditions
   const ORconditions = [
     { title: { contains: search, mode: "insensitive" } },
     { description: { contains: search, mode: "insensitive" } },
@@ -399,32 +412,41 @@ export const searchBlogsController = asyncHandler(async (req, res) => {
     where: { OR: ORconditions },
     include: {
       author: true,
-      blogReaction: true,
+      blogReaction: {
+        select: { type: true }
+      }, // NEED THIS TO COUNT LIKES/DISLIKES
       _count: {
-        select: {comments: true}
+        select: { comments: true },
       },
     },
+    orderBy: { createdAt: "desc" },
+    skip,
+    take: limit
   });
 
-  // Score (YouTube-style relevance ranking)
+  // Ranking
   const ranked = blogs.map((blog) => {
     const likes = blog.blogReaction.filter((r) => r.type === "LIKE").length;
-    const dislikes = blog.blogReaction.filter(
-      (r) => r.type === "DISLIKE",
-    ).length;
-    const commentsCount = blog.comments.length;
+    const dislikes = blog.blogReaction.filter((r) => r.type === "DISLIKE").length;
+    const commentsCount = blog._count.comments; // FIXED — it's a number
     const views = blog.views || 0;
     const shares = blog.shares || 0;
 
     const engagement =
-      likes * 5 + commentsCount * 6 + shares * 10 + views * 0.2 - dislikes * 3;
+      likes * 5 +
+      commentsCount * 6 +
+      shares * 10 +
+      views * 0.2 -
+      dislikes * 3;
 
     const titleBoost = blog.title.toLowerCase().includes(search) ? 1.8 : 1.0;
 
     const hoursAgo = (Date.now() - new Date(blog.createdAt).getTime()) / 36e5;
     const recencyBoost = 1 / (1 + hoursAgo / 16);
 
-    const relevanceBoost = matchingCategories.includes(blog.category)
+    const relevanceBoost = blog.category.some((cat) =>
+      matchingCategories.includes(cat)
+    )
       ? 2.5
       : 1.0;
 
@@ -434,10 +456,6 @@ export const searchBlogsController = asyncHandler(async (req, res) => {
   });
 
   ranked.sort((a, b) => b.score - a.score);
-
-  // Pagination
-  const start = (page - 1) * limit;
-  const paginated = ranked.slice(start, start + limit);
 
   return res.status(200).json({
     message: "Search results",
@@ -451,6 +469,10 @@ export const searchBlogsController = asyncHandler(async (req, res) => {
     },
   });
 });
+
+
+
+
 
 
 
