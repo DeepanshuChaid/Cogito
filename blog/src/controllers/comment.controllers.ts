@@ -38,10 +38,8 @@ export const createCommentController = asyncHandler(async (req, res) => {
   await invalidateCache([
     `blog:${blogId}`,
     `user_blogs:${userId}`,
-    "recommended_blogs:all:*",
-  ]);:*
+  ]);:
 
-  invalidateRecommendedBlogsCache(blog.category);
 
   return res.status(201).json({
     message: "Comment created successfully",
