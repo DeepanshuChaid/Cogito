@@ -1,6 +1,6 @@
 import rateLimit from "express-rate-limit";
 import RedisStore from "rate-limit-redis";
-import { redisClient } from "./redis.js";
+import { redisClient } from "../server.js";
 // Limit to 20 requests per minute per IP
 export const generalLimiter = rateLimit({
     store: new RedisStore({
