@@ -24,14 +24,28 @@ export const createCommentController = asyncHandler(async (req, res) => {
 
   if (!blog) throw new Error("Blog not found");
 
-  const newComment = await prisma.comments.create({
-    data: {
-      comment,
-      user: { connect: { id: userId } },
-      blog: { connect: { id: blogId } },
-      ...(parentId && { parent: { connect: { id: parentId } } }),
-    },
+  // Create comment and update score in transaction
+  const newComment = await prisma.$transaction(async (tx) => {
+    const comment = await tx.comments.create({
+      data: {
+        comment,
+        user: { connect: { id: userId } },
+        blog: { connect: { id: blogId } },
+        ...(parentId && { parent: { connect: { id: parentId } } }),
+      },
+    });
+
+    // Update engagement score
+    await tx.blog.update({
+      where: { id: blogId },
+      data: {
+        engagementScore: { increment: 6 }, // Comments are valuable
+      },
+    });
+
+    return comment;
   });
+  
 
   if (!newComment) throw new Error("Error creating comment");
 
@@ -66,7 +80,13 @@ export const deleteCommentController = asyncHandler(async (req, res) => {
     throw new Error("You are not authorized to delete this comment");
   }
 
-  await prisma.comments.delete({ where: { id: commentId } });
+  await prisma.$transaction([
+    prisma.comments.delete({where: {id: commentId}}),
+    prisma.blog.update({
+      where: {id: blogId},
+      data: {engagementScore: {decrement: 6}}
+    })
+  ])
 
   // Invalidate cache for the blog and its comments
   await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
@@ -154,3 +174,5 @@ export const getCommentsController = asyncHandler(async (req, res) => {
     data: comments,
   });
 });
+
+

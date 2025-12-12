@@ -9,11 +9,29 @@ export const saveBlogController = asyncHandler(async (req, res) => {
 
   if (!blog) throw new Error("Blog not found");
 
-  const savedBlog = await prisma.savedblogs.create({
-    data: {
-      user: { connect: { id: userId } },
-      blog: { connect: { id: blogId } },
-    },
+  const alreadySaved = await prisma.savedblogs.findUnique({
+    where: { userId_blogId: { userId, blogId } },
+  });
+  
+  if (alreadySaved) throw new Error("Blog already saved");
+
+  // Save and update score
+  const savedBlog = await prisma.$transaction(async (tx) => {
+    const saved = await tx.savedblogs.create({
+      data: {
+        user: { connect: { id: userId } },
+        blog: { connect: { id: blogId } },
+      },
+    });
+
+    await tx.blog.update({
+      where: { id: blogId },
+      data: {
+        engagementScore: { increment: 8 }, // Saves are very valuable
+      },
+    });
+
+    return saved;
   });
 
   return res.status(201).json({
@@ -31,7 +49,14 @@ export const getSavedBlogsController = asyncHandler(async (req, res) => {
 
   const savedBlogs = await prisma.savedblogs.findMany({
     where: { userId },
-    include: { blog: true },
+    include: { blog: {
+      include: {
+        blogReaction: {
+          select: {type: true},
+          _count: {select: {comments: true}}
+        }
+      }  
+    } },
   })
 
   if (!savedBlogs) throw new Error("No saved blogs found")
@@ -52,7 +77,9 @@ export const deleteSavedBlogController = asyncHandler(async (req, res) => {
   const blog = await prisma.blog.findUnique({ where: { id: blogId } })
   if (!blog) throw new Error("Blog not found")
 
-  const savedBlog = await prisma.savedblogs.delete({
+  // Delete and update score
+  const savedBlog = await prisma.$transaction(async (tx) => {
+    const deleted = await tx.savedblogs.delete({
       where: {
         userId_blogId: {
           userId,
@@ -60,6 +87,17 @@ export const deleteSavedBlogController = asyncHandler(async (req, res) => {
         },
       },
     });
+
+    await tx.blog.update({
+      where: { id: blogId },
+      data: {
+        engagementScore: { decrement: 8 }, // Remove save weight
+      },
+    });
+
+    return deleted;
+  });
+  
   if (!savedBlog) throw new Error("Blog not found in saved blogs")
 
   return res.status(200).json({
@@ -67,6 +105,11 @@ export const deleteSavedBlogController = asyncHandler(async (req, res) => {
     data: savedBlog
   })
 })
+
+
+
+
+
 
 
 

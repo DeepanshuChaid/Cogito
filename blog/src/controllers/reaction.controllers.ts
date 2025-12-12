@@ -3,7 +3,7 @@ import prisma from "../prisma.js";
 import { invalidateCache } from "../utils/redis.utils.js";
 
 // *************************** //
-// LIKE BLOG CONTROLLER (IMPROVED)
+// LIKE BLOG CONTROLLER 
 // *************************** //
 export const likeBlogController = asyncHandler(async (req, res) => {
   const blogId = req.params.id;
@@ -15,20 +15,26 @@ export const likeBlogController = asyncHandler(async (req, res) => {
 
   if (!blog) throw new Error("Blog not found");
 
-  const isLiked = await prisma.blogreaction.findFirst({
-    where: { blogId, userId, type: "LIKE" },
+  const reactions = await prisma.blogreaction.findMany({
+    where: { blogId, userId },
   });
-
-  const isDisliked = await prisma.blogreaction.findFirst({
-    where: { blogId, userId, type: "DISLIKE" },
-  });
+  const isLiked = reactions.find(r => r.type === "LIKE");
+  const isDisliked = reactions.find(r => r.type === "DISLIKE");
 
   if (isLiked) {
-    await prisma.blogreaction.delete({
-      where: { id: isLiked.id },
-    });
+    // Unlike: remove reaction and decrease score
+    await prisma.$transaction([
+      prisma.blogreaction.delete({
+        where: { id: isLiked.id },
+      }),
+      prisma.blog.update({
+        where: { id: blogId },
+        data: {
+          engagementScore: { decrement: 4 }, // Remove like weight
+        },
+      }),
+    ]);
 
-    // INVALIDATE CACHE WHEN UNLIKING
     await invalidateCache([`blog:${blogId}`, `user_blogs:${req.user?.id}`]);
 
     return res.status(200).json({
@@ -37,14 +43,35 @@ export const likeBlogController = asyncHandler(async (req, res) => {
   }
 
   if (isDisliked) {
-    await prisma.blogreaction.delete({
-      where: { id: isDisliked.id },
-    });
+    // Switch from dislike to like
+    await prisma.$transaction([
+      prisma.blogreaction.delete({
+        where: { id: isDisliked.id },
+      }),
+      prisma.blogreaction.create({
+        data: { blogId, userId, type: "LIKE" },
+      }),
+      prisma.blog.update({
+        where: { id: blogId },
+        data: {
+          engagementScore: { increment: 5 }, // Add like weight + remove dislike penalty (4 + 1)
+        },
+      }),
+    ]);
+  } else {
+    // New like
+    await prisma.$transaction([
+      prisma.blogreaction.create({
+        data: { blogId, userId, type: "LIKE" },
+      }),
+      prisma.blog.update({
+        where: { id: blogId },
+        data: {
+          engagementScore: { increment: 4 }, // Like weight
+        },
+      }),
+    ]);
   }
-
-  await prisma.blogreaction.create({
-    data: { blogId, userId, type: "LIKE" },
-  });
 
   await invalidateCache([`blog:${blogId}`, `user_blogs:${req.user?.id}`]);
 
@@ -54,7 +81,7 @@ export const likeBlogController = asyncHandler(async (req, res) => {
 });
 
 // *************************** //
-// DISLIKE BLOG CONTROLLER (IMPROVED)
+// DISLIKE BLOG CONTROLLER
 // *************************** //
 export const dislikeBlogController = asyncHandler(async (req, res) => {
   const blogId = req.params.id;
@@ -66,20 +93,26 @@ export const dislikeBlogController = asyncHandler(async (req, res) => {
 
   if (!blog) throw new Error("Blog not found");
 
-  const isLiked = await prisma.blogreaction.findFirst({
-    where: { blogId, userId, type: "LIKE" },
+  const reactions = await prisma.blogreaction.findMany({
+    where: { blogId, userId },
   });
-
-  const isDisliked = await prisma.blogreaction.findFirst({
-    where: { blogId, userId, type: "DISLIKE" },
-  });
+  const isLiked = reactions.find(r => r.type === "LIKE");
+  const isDisliked = reactions.find(r => r.type === "DISLIKE");
 
   if (isDisliked) {
-    await prisma.blogreaction.delete({
-      where: { id: isDisliked.id },
-    });
+    // Remove dislike
+    await prisma.$transaction([
+      prisma.blogreaction.delete({
+        where: { id: isDisliked.id },
+      }),
+      prisma.blog.update({
+        where: { id: blogId },
+        data: {
+          engagementScore: { increment: 1 }, // Remove small penalty
+        },
+      }),
+    ]);
 
-    // INVALIDATE CACHE WHEN REMOVING DISLIKE
     await invalidateCache([`blog:${blogId}`, `user_blogs:${req.user?.id}`]);
 
     return res.status(200).json({
@@ -88,14 +121,35 @@ export const dislikeBlogController = asyncHandler(async (req, res) => {
   }
 
   if (isLiked) {
-    await prisma.blogreaction.delete({
-      where: { id: isLiked.id },
-    });
+    // Switch from like to dislike
+    await prisma.$transaction([
+      prisma.blogreaction.delete({
+        where: { id: isLiked.id },
+      }),
+      prisma.blogreaction.create({
+        data: { blogId, userId, type: "DISLIKE" },
+      }),
+      prisma.blog.update({
+        where: { id: blogId },
+        data: {
+          engagementScore: { decrement: 5 }, // Remove like + add dislike penalty (4 + 1)
+        },
+      }),
+    ]);
+  } else {
+    // New dislike (small penalty)
+    await prisma.$transaction([
+      prisma.blogreaction.create({
+        data: { blogId, userId, type: "DISLIKE" },
+      }),
+      prisma.blog.update({
+        where: { id: blogId },
+        data: {
+          engagementScore: { decrement: 1 }, // Small penalty
+        },
+      }),
+    ]);
   }
-
-  await prisma.blogreaction.create({
-    data: { blogId, userId, type: "DISLIKE" },
-  });
 
   await invalidateCache([`blog:${blogId}`, `user_blogs:${req.user?.id}`]);
 

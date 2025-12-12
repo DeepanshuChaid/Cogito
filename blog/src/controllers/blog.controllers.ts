@@ -36,7 +36,7 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
       // Increment DB views async
       await prisma.blog.update({
         where: { id: blogId },
-        data: { views: { increment: 1 } },
+        data: { views: { increment: 1, engagementScore: { increment: 0.5 } } },
       });
 
       // Update cached object without refetch
@@ -66,7 +66,7 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
         },
       },
       _count: {
-        select: { comments: true },
+        select: { comments: true, savedBlogs: true },
       },
     },
   });
@@ -86,7 +86,7 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
     // increment + return updated fields IN ONE HIT
     blog = await prisma.blog.update({
       where: { id: blogId },
-      data: { views: { increment: 1 } },
+      data: { views: { increment: 1 }, engagementScore: { increment: 0.5 } },
       include: {
         author: true,
         blogReaction: {
@@ -95,7 +95,7 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
           },
         },
         _count: {
-          select: { comments: true },
+          select: { comments: true, savedBlogs: true },
         },
       },
     });
@@ -217,7 +217,7 @@ export const updateBlogController = asyncHandler(async (req, res) => {
         },
       },
       _count: {
-        select: { comments: true },
+        select: { comments: true, savedBlogs: true },
       },
     },
   });
@@ -268,66 +268,6 @@ export const deleteBlogController = asyncHandler(async (req, res) => {
   });
 });
 
-// *************************** //
-// GET RECOMMENDED BLOGS CONTROLLER
-// *************************** //
-export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
-  const categories = req.body.category;
-  const page = req.query.page ? parseInt(req.query.page as string) : 1;
-  const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-  const skip = (page - 1) * limit;
-
-  const totalBlogs = await prisma.blog.count({
-    where: categories ? { category: { hasSome: categories } } : {},
-  });
-
-  const blogs = await prisma.blog.findMany({
-    where: categories ? { category: { hasSome: categories } } : {},
-    include: {
-      author: true,
-      blogReaction: true,
-      _count: { select: { comments: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-    skip,
-    take: limit,
-  });
-
-  // Cache individual blogs - smart for when users click into them
-  for (const blog of blogs) {
-    await redisClient.set(`blog:${blog.id}`, JSON.stringify(blog), { EX: 60*60*5 });
-  }
-
-  const blogsWithScore = blogs.map(blog => {
-    const likes = blog.blogReaction.filter(r => r.type === 'LIKE').length;
-    const dislikes = blog.blogReaction.filter(r => r.type === 'DISLIKE').length;
-    const comments = blog._count.comments;
-    const views = blog.views || 0;
-    const shares = blog.shares || 0;
-
-    const engagementScore = likes*4 + comments*6 + shares*10 + views*0.15 - dislikes*3;
-    const hoursPassed = (Date.now() - new Date(blog.createdAt).getTime()) / 36e5;
-    const recencyBoost = 1 / (1 + hoursPassed/12);
-    const score = engagementScore * recencyBoost;
-
-    return { ...blog, score };
-  });
-
-  blogsWithScore.sort((a, b) => b.score - a.score);
-
-  const pagination = {
-    currentPage: page,
-    totalPages: Math.ceil(totalBlogs / limit),
-    totalBlogs,
-    limit,
-  };
-
-  return res.status(200).json({
-    message: "Recommended blogs fetched",
-    data: blogsWithScore,
-    pagination,
-  });
-});
 
 // *************************** //
 // GET ALL USERS BLOGS CONTROLLER
@@ -356,7 +296,7 @@ export const getAllUserBlogsController = asyncHandler(async (req, res) => {
         },
       },
       _count: {
-        select: { comments: true },
+        select: { comments: true, savedBlogs: true},
       },
     },
   });
@@ -372,104 +312,23 @@ export const getAllUserBlogsController = asyncHandler(async (req, res) => {
 });
 
 
-
 // *************************** //
-// SEARCH BLOGS CONTROLLER (FIXED)
+// INCREMENT SHARE BLOG CONTROLLER
 // *************************** //
-export const searchBlogsController = asyncHandler(async (req, res) => {
-  const query = req.query.search?.trim();
-  const page = req.query.page ? parseInt(req.query.page) : 1;
-  const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+export const incrementShareBlogController = asyncHandler(async (req, res) => {
+  const blogId = req.params.id;
 
-  const skip = (page - 1) * limit
+  await prisma.blog.update({
+    where: { id: blogId },
+    data: { shares: { increment: 1 }, engagementScore: { increment: 5 } },
+  })
 
-  if (!query || query.length < 2) {
-    return res.status(400).json({ message: "Search query too short" });
-  }
-
-  const search = query.toLowerCase();
-
-  // Match categories — safe because it's enum
-  const matchingCategories = Object.values(BLOGCATEGORY).filter((cat) =>
-    cat.toLowerCase().includes(search)
-  );
-
-  // OR conditions
-  const ORconditions = [
-    { title: { contains: search, mode: "insensitive" } },
-    { description: { contains: search, mode: "insensitive" } },
-    { blogContent: { contains: search, mode: "insensitive" } },
-  ];
-
-  if (matchingCategories.length > 0) {
-    ORconditions.push({
-      category: { hasSome: matchingCategories },
-    });
-  }
-
-  // Fetch from DB
-  const blogs = await prisma.blog.findMany({
-    where: { OR: ORconditions },
-    include: {
-      author: true,
-      blogReaction: {
-        select: { type: true }
-      }, // NEED THIS TO COUNT LIKES/DISLIKES
-      _count: {
-        select: { comments: true },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-    skip,
-    take: limit
-  });
-
-  // Ranking
-  const ranked = blogs.map((blog) => {
-    const likes = blog.blogReaction.filter((r) => r.type === "LIKE").length;
-    const dislikes = blog.blogReaction.filter((r) => r.type === "DISLIKE").length;
-    const commentsCount = blog._count.comments; // FIXED — it's a number
-    const views = blog.views || 0;
-    const shares = blog.shares || 0;
-
-    const engagement =
-      likes * 5 +
-      commentsCount * 6 +
-      shares * 10 +
-      views * 0.2 -
-      dislikes * 3;
-
-    const titleBoost = blog.title.toLowerCase().includes(search) ? 1.8 : 1.0;
-
-    const hoursAgo = (Date.now() - new Date(blog.createdAt).getTime()) / 36e5;
-    const recencyBoost = 1 / (1 + hoursAgo / 16);
-
-    const relevanceBoost = blog.category.some((cat) =>
-      matchingCategories.includes(cat)
-    )
-      ? 2.5
-      : 1.0;
-
-    const score = engagement * recencyBoost * titleBoost * relevanceBoost;
-
-    return { ...blog, score };
-  });
-
-  ranked.sort((a, b) => b.score - a.score);
+  await invalidateCache([`blog:${blogId}`, `user_blogs:${req.user?.id}`])
 
   return res.status(200).json({
-    message: "Search results",
-    query,
-    totalResults: ranked.length,
-    data: paginated,
-    pagination: {
-      currentPage: page,
-      totalPages: Math.ceil(ranked.length / limit),
-      limit,
-    },
-  });
-});
-
+    message: "Blog share incremented successfully"
+  })
+}) 
 
 
 
