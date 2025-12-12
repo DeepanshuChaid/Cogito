@@ -9,6 +9,7 @@ import "dotenv/config";
 import { isAuthenticatedMiddleware } from "./middlewares/isAuthenticatedMiddleware.js";
 import cookieParser from "cookie-parser";
 import { createClient } from "redis";
+import { blogLimiter } from "./ratelimiter/blogs.ratelimiter.js";
 
 // Initialize Redis client
 export const redisClient = createClient({
@@ -35,7 +36,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.use("/api/blog", isAuthenticatedMiddleware, blogRoutes);
+app.use("/api/blog", blogLimiter, isAuthenticatedMiddleware, blogRoutes);
 app.use("/api/comment", isAuthenticatedMiddleware, commentRoutes);
 app.use("/api/user", isAuthenticatedMiddleware, userRoutes);
 
