@@ -11,11 +11,21 @@ export const saveBlogController = asyncHandler(async (req, res) => {
     });
     if (alreadySaved)
         throw new Error("Blog already saved");
-    const savedBlog = await prisma.savedblogs.create({
-        data: {
-            user: { connect: { id: userId } },
-            blog: { connect: { id: blogId } },
-        },
+    // Save and update score
+    const savedBlog = await prisma.$transaction(async (tx) => {
+        const saved = await tx.savedblogs.create({
+            data: {
+                user: { connect: { id: userId } },
+                blog: { connect: { id: blogId } },
+            },
+        });
+        await tx.blog.update({
+            where: { id: blogId },
+            data: {
+                engagementScore: { increment: 8 }, // Saves are very valuable
+            },
+        });
+        return saved;
     });
     return res.status(201).json({
         message: "Blog saved successfully",
@@ -54,13 +64,23 @@ export const deleteSavedBlogController = asyncHandler(async (req, res) => {
     const blog = await prisma.blog.findUnique({ where: { id: blogId } });
     if (!blog)
         throw new Error("Blog not found");
-    const savedBlog = await prisma.savedblogs.delete({
-        where: {
-            userId_blogId: {
-                userId,
-                blogId,
+    // Delete and update score
+    const savedBlog = await prisma.$transaction(async (tx) => {
+        const deleted = await tx.savedblogs.delete({
+            where: {
+                userId_blogId: {
+                    userId,
+                    blogId,
+                },
             },
-        },
+        });
+        await tx.blog.update({
+            where: { id: blogId },
+            data: {
+                engagementScore: { decrement: 8 }, // Remove save weight
+            },
+        });
+        return deleted;
     });
     if (!savedBlog)
         throw new Error("Blog not found in saved blogs");

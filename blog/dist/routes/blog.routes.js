@@ -1,6 +1,7 @@
 import { Router } from "express";
 import uploadFile from "../middlewares/multerMiddleware.js";
-import { createBlogController, updateBlogController, deleteBlogController, getAllUserBlogsController, getBlogByIdController, getRecommendedBlogsController, searchBlogsController } from "../controllers/blog.controllers.js";
+import { createBlogController, updateBlogController, deleteBlogController, getAllUserBlogsController, getBlogByIdController, incrementShareBlogController } from "../controllers/blog.controllers.js";
+import { getRecommendedBlogsController, searchBlogsController, } from "../controllers/recommendation.controllers.js";
 import { likeBlogController, dislikeBlogController, } from "../controllers/reaction.controllers.js";
 const blogRoutes = Router();
 blogRoutes.get("/search", searchBlogsController);
@@ -12,4 +13,5 @@ blogRoutes.get("/all", getAllUserBlogsController);
 blogRoutes.get("/recommended", getRecommendedBlogsController);
 blogRoutes.post("/like/:id", likeBlogController);
 blogRoutes.post("/dislike/:id", dislikeBlogController);
+blogRoutes.post("/share/:id", incrementShareBlogController);
 export default blogRoutes;

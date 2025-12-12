@@ -1,6 +1,6 @@
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
-import { invalidateCache, invalidateRecommendedBlogsCache, } from "../utils/redis.utils.js";
+import { invalidateCache, getCachedData, setCachedData, deleteCommentCaches, } from "../utils/redis.utils.js";
 // *************************** //
 // CREATE COMMENTS CONTROLLER
 // *************************** //
@@ -15,17 +15,29 @@ export const createCommentController = asyncHandler(async (req, res) => {
     });
     if (!blog)
         throw new Error("Blog not found");
-    const newComment = await prisma.comments.create({
-        data: {
-            comment,
-            user: { connect: { id: userId } },
-            blog: { connect: { id: blogId } },
-            ...(parentId && { parent: { connect: { id: parentId } } }),
-        },
+    // Create comment and update score in transaction
+    const newComment = await prisma.$transaction(async (tx) => {
+        const response = await tx.comments.create({
+            data: {
+                comment,
+                user: { connect: { id: userId } },
+                blog: { connect: { id: blogId } },
+                ...(parentId && { parent: { connect: { id: parentId } } }),
+            },
+        });
+        // Update engagement score
+        await tx.blog.update({
+            where: { id: blogId },
+            data: {
+                engagementScore: { increment: 6 }, // Comments are valuable
+            },
+        });
+        return response;
     });
     if (!newComment)
         throw new Error("Error creating comment");
     await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
+    await deleteCommentCaches(blogId);
     return res.status(201).json({
         message: "Comment created successfully",
         data: newComment,
@@ -50,10 +62,16 @@ export const deleteCommentController = asyncHandler(async (req, res) => {
     if (comment.userId !== userId && role !== "author") {
         throw new Error("You are not authorized to delete this comment");
     }
-    await prisma.comments.delete({ where: { id: commentId } });
+    await prisma.$transaction([
+        prisma.comments.delete({ where: { id: commentId } }),
+        prisma.blog.update({
+            where: { id: blogId },
+            data: { engagementScore: { decrement: 6 } },
+        }),
+    ]);
     // Invalidate cache for the blog and its comments
     await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
-    await invalidateRecommendedBlogsCache(blog.category);
+    await deleteCommentCaches(blogId);
     return res.status(200).json({
         message: "Comment deleted successfully",
         role,
@@ -84,8 +102,11 @@ export const updateCommentController = asyncHandler(async (req, res) => {
         where: { id: commentId },
         data: { comment, isEdited: true },
     });
-    await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
-    await invalidateRecommendedBlogsCache(blog.category);
+    await invalidateCache([
+        `blog:${blogId}`,
+        `user_blogs:${userId}`,
+    ]);
+    await deleteCommentCaches(blogId);
     return res.status(200).json({
         message: "Comment updated successfully",
         data: updatedComment,
@@ -99,9 +120,14 @@ export const getCommentsController = asyncHandler(async (req, res) => {
     const userId = req.user?.id;
     const page = req.query.page ? parseInt(req.query.page) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+    const cacheKey = `comments:${blogId}:${page}`;
+    const cachedData = await getCachedData(res, cacheKey, "Comments fetched successfully");
+    if (cachedData)
+        return;
     const skip = (page - 1) * limit;
     const blog = await prisma.blog.findFirst({
         where: { id: blogId },
+        select: { id: true },
     });
     if (!blog)
         throw new Error("Blog not found");
@@ -117,6 +143,10 @@ export const getCommentsController = asyncHandler(async (req, res) => {
     });
     if (!comments)
         throw new Error("No comments found");
+    comments.forEach((e) => {
+        e.userId === userId ? e.role = "author" : e.role = "user";
+    });
+    await setCachedData(cacheKey, comments);
     return res.status(200).json({
         message: "Comments fetched successfully",
         data: comments,

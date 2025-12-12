@@ -22,20 +22,16 @@ export const invalidateCache = async (keys) => {
         }
     }
 };
-// *************************** //
-// Call this whenever a blog is created, updated, deleted, or reactions change
-export const invalidateRecommendedBlogsCache = async (categories) => {
-    if (!categories)
-        return;
-    const cats = Array.isArray(categories) ? categories : [categories];
-    // pattern: recommended_blogs:cat1,cat2:*
-    for (const cat of cats) {
-        const keys = await redisClient.keys(`recommended_blogs:*${cat}*`);
-        if (keys.length)
-            await redisClient.del(keys);
-    }
-    // also remove "recommended_blogs:all:*"
-    const allKeys = await redisClient.keys(`recommended_blogs:all:*`);
-    if (allKeys.length)
-        await redisClient.del(allKeys);
-};
+export async function deleteCommentCaches(blogId) {
+    let cursor = '0';
+    do {
+        const result = await redisClient.scan(cursor, {
+            MATCH: `comments:${blogId}:*`,
+            COUNT: 100
+        });
+        cursor = result.cursor;
+        if (result.keys.length > 0) {
+            await redisClient.del(result.keys);
+        }
+    } while (cursor !== '0');
+}

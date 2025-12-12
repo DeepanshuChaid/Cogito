@@ -45,4 +45,7 @@ app.listen(PORT, async () => {
         include: { blogReaction: true, comments: true },
     });
     console.log(blog);
+    const redisKeys = await redisClient.keys("blog:*");
+    console.log("checking redis keys", redisKeys);
+    // console.log(idk)
 });
