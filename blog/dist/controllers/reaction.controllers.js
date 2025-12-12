@@ -12,12 +12,11 @@ export const likeBlogController = asyncHandler(async (req, res) => {
     });
     if (!blog)
         throw new Error("Blog not found");
-    const isLiked = await prisma.blogreaction.findFirst({
-        where: { blogId, userId, type: "LIKE" },
+    const reactions = await prisma.blogreaction.findMany({
+        where: { blogId, userId },
     });
-    const isDisliked = await prisma.blogreaction.findFirst({
-        where: { blogId, userId, type: "DISLIKE" },
-    });
+    const isLiked = reactions.find(r => r.type === "LIKE");
+    const isDisliked = reactions.find(r => r.type === "DISLIKE");
     if (isLiked) {
         await prisma.blogreaction.delete({
             where: { id: isLiked.id },
@@ -52,12 +51,11 @@ export const dislikeBlogController = asyncHandler(async (req, res) => {
     });
     if (!blog)
         throw new Error("Blog not found");
-    const isLiked = await prisma.blogreaction.findFirst({
-        where: { blogId, userId, type: "LIKE" },
+    const reactions = await prisma.blogreaction.findMany({
+        where: { blogId, userId },
     });
-    const isDisliked = await prisma.blogreaction.findFirst({
-        where: { blogId, userId, type: "DISLIKE" },
-    });
+    const isLiked = reactions.find(r => r.type === "LIKE");
+    const isDisliked = reactions.find(r => r.type === "DISLIKE");
     if (isDisliked) {
         await prisma.blogreaction.delete({
             where: { id: isDisliked.id },

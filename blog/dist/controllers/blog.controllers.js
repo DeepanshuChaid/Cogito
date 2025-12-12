@@ -50,7 +50,7 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
                 },
             },
             _count: {
-                select: { comments: true },
+                select: { comments: true, savedBlogs: true },
             },
         },
     });
@@ -76,7 +76,7 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
                     },
                 },
                 _count: {
-                    select: { comments: true },
+                    select: { comments: true, savedBlogs: true },
                 },
             },
         });
@@ -174,7 +174,7 @@ export const updateBlogController = asyncHandler(async (req, res) => {
                 },
             },
             _count: {
-                select: { comments: true },
+                select: { comments: true, savedBlogs: true },
             },
         },
     });
@@ -231,7 +231,7 @@ export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
         include: {
             author: true,
             blogReaction: true,
-            _count: { select: { comments: true } },
+            _count: { select: { comments: true, savedBlogs: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -287,7 +287,7 @@ export const getAllUserBlogsController = asyncHandler(async (req, res) => {
                 },
             },
             _count: {
-                select: { comments: true },
+                select: { comments: true, savedBlogs: true },
             },
         },
     });
@@ -333,7 +333,7 @@ export const searchBlogsController = asyncHandler(async (req, res) => {
                 select: { type: true }
             }, // NEED THIS TO COUNT LIKES/DISLIKES
             _count: {
-                select: { comments: true },
+                select: { comments: true, savedBlogs: true },
             },
         },
         orderBy: { createdAt: "desc" },

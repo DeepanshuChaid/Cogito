@@ -70,7 +70,6 @@ model Blog {
   shares Int @default(0)
 
   engagementScore  Float   @default(0)
-  lastScoreUpdate  DateTime?
 
   blogReaction Blogreaction[]
 
@@ -265,5 +264,7 @@ enum BlogCategory {
   CONSENT_AND_SAFETY
   ADULT_STORIES
 }
+
+
 
 

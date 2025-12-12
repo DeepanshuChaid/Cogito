@@ -6,6 +6,11 @@ export const saveBlogController = asyncHandler(async (req, res) => {
     const blog = await prisma.blog.findUnique({ where: { id: blogId } });
     if (!blog)
         throw new Error("Blog not found");
+    const alreadySaved = await prisma.savedblogs.findUnique({
+        where: { userId_blogId: { userId, blogId } },
+    });
+    if (alreadySaved)
+        throw new Error("Blog already saved");
     const savedBlog = await prisma.savedblogs.create({
         data: {
             user: { connect: { id: userId } },
@@ -24,7 +29,14 @@ export const getSavedBlogsController = asyncHandler(async (req, res) => {
     const userId = req.user?.id;
     const savedBlogs = await prisma.savedblogs.findMany({
         where: { userId },
-        include: { blog: true },
+        include: { blog: {
+                include: {
+                    blogReaction: {
+                        select: { type: true },
+                        _count: { select: { comments: true } }
+                    }
+                }
+            } },
     });
     if (!savedBlogs)
         throw new Error("No saved blogs found");
