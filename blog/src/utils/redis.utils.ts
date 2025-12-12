@@ -28,3 +28,22 @@ export const invalidateCache = async (keys: string[]) => {
   }
 }
 
+
+export async function deleteCommentCaches(blogId: string) {
+    let cursor = '0';
+
+    do {
+      const result = await redisClient.scan(cursor, {
+        MATCH: `comments:${blogId}:*`,
+        COUNT: 100
+      });
+
+      cursor = result.cursor;
+
+      if (result.keys.length > 0) {
+        await redisClient.del(result.keys);
+      }
+    } while (cursor !== '0');
+  }
+
+
