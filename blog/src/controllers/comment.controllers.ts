@@ -2,10 +2,11 @@ import { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
 import {
   invalidateCache,
-  invalidateRecommendedBlogsCache,
   getCachedData,
   setCachedData,
+  deleteCommentCaches,
 } from "../utils/redis.utils.js";
+import { redisClient } from "../server.js";
 
 // *************************** //
 // CREATE COMMENTS CONTROLLER
@@ -26,7 +27,7 @@ export const createCommentController = asyncHandler(async (req, res) => {
 
   // Create comment and update score in transaction
   const newComment = await prisma.$transaction(async (tx) => {
-    const comment = await tx.comments.create({
+    const response = await tx.comments.create({
       data: {
         comment,
         user: { connect: { id: userId } },
@@ -43,13 +44,14 @@ export const createCommentController = asyncHandler(async (req, res) => {
       },
     });
 
-    return comment;
+    return response;
   });
-  
 
   if (!newComment) throw new Error("Error creating comment");
 
   await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
+
+  await deleteCommentCaches(blogId)
 
   return res.status(201).json({
     message: "Comment created successfully",
@@ -81,17 +83,17 @@ export const deleteCommentController = asyncHandler(async (req, res) => {
   }
 
   await prisma.$transaction([
-    prisma.comments.delete({where: {id: commentId}}),
+    prisma.comments.delete({ where: { id: commentId } }),
     prisma.blog.update({
-      where: {id: blogId},
-      data: {engagementScore: {decrement: 6}}
-    })
-  ])
+      where: { id: blogId },
+      data: { engagementScore: { decrement: 6 } },
+    }),
+  ]);
 
   // Invalidate cache for the blog and its comments
   await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
 
-  await invalidateRecommendedBlogsCache(blog.category);
+  await deleteCommentCaches(blogId)
 
   return res.status(200).json({
     message: "Comment deleted successfully",
@@ -128,9 +130,12 @@ export const updateCommentController = asyncHandler(async (req, res) => {
     data: { comment, isEdited: true },
   });
 
-  await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
+  await invalidateCache([
+    `blog:${blogId}`,
+    `user_blogs:${userId}`,
+  ]);
 
-  await invalidateRecommendedBlogsCache(blog.category);
+  await deleteCommentCaches(blogId)
 
   return res.status(200).json({
     message: "Comment updated successfully",
@@ -148,10 +153,20 @@ export const getCommentsController = asyncHandler(async (req, res) => {
   const page = req.query.page ? parseInt(req.query.page as string) : 1;
   const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
 
+  const cacheKey = `comments:${blogId}:${page}`;
+
+  const cachedData = await getCachedData(
+    res,
+    cacheKey,
+    "Comments fetched successfully",
+  );
+  if (cachedData) return;
+
   const skip = (page - 1) * limit;
 
   const blog = await prisma.blog.findFirst({
     where: { id: blogId },
+    select: { id: true },
   });
 
   if (!blog) throw new Error("Blog not found");
@@ -168,6 +183,12 @@ export const getCommentsController = asyncHandler(async (req, res) => {
   });
 
   if (!comments) throw new Error("No comments found");
+
+  comments.forEach((e) => {
+    e.userId === userId ? e.role = "author" : e.role = "user";
+  })
+
+  await setCachedData(cacheKey, comments);
 
   return res.status(200).json({
     message: "Comments fetched successfully",

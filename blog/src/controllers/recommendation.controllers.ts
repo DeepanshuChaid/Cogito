@@ -1,12 +1,14 @@
 import  { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
 import { getCachedData, setCachedData } from "../utils/redis.utils.js";
+import BLOGCATEGORY from "../enum/blogCategory.enum.js";
+import { redisClient } from "../server.js";
 
 // *************************** //
 // GET RECOMMENDED BLOGS CONTROLLER (IMPROVED)
 // *************************** //
 export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
-  const categories = req.body.category;
+  const categories = req.body?.category;
   const page = req.query.page ? parseInt(req.query.page as string) : 1;
   const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
   const skip = (page - 1) * limit;
@@ -50,8 +52,12 @@ export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
         } 
       },
     },
-    orderBy: { engagementScore: 'desc', createdAt: 'desc' }, // Pre-sort by base score
+    orderBy: [
+      { engagementScore: 'desc'},
+      { createdAt: 'desc' }
+    ], // Pre-sort by base score
     take: limit, // Get 3x more for reordering after time decay
+    skip
   });
 
   // Apply time decay and calculate final scores
@@ -168,53 +174,25 @@ export const searchBlogsController = asyncHandler(async (req, res) => {
         select: { comments: true, savedBlogs: true },
       },
     },
-    orderBy: { createdAt: "desc", engagementScore: "desc" },
+    orderBy: [
+      { engagementScore: 'desc'},
+      { createdAt: 'desc' }
+    ],
     skip,
     take: limit
   });
 
-  // Ranking
-  const ranked = blogs.map((blog) => {
-    const likes = blog.blogReaction.filter((r) => r.type === "LIKE").length;
-    const dislikes = blog.blogReaction.filter((r) => r.type === "DISLIKE").length;
-    const commentsCount = blog._count.comments; // FIXED — it's a number
-    const views = blog.views || 0;
-    const shares = blog.shares || 0;
-
-    const engagement =
-      likes * 5 +
-      commentsCount * 6 +
-      shares * 10 +
-      views * 0.2 -
-      dislikes * 3;
-
-    const titleBoost = blog.title.toLowerCase().includes(search) ? 1.8 : 1.0;
-
-    const hoursAgo = (Date.now() - new Date(blog.createdAt).getTime()) / 36e5;
-    const recencyBoost = 1 / (1 + hoursAgo / 16);
-
-    const relevanceBoost = blog.category.some((cat) =>
-      matchingCategories.includes(cat)
-    )
-      ? 2.5
-      : 1.0;
-
-    const score = engagement * recencyBoost * titleBoost * relevanceBoost;
-
-    return { ...blog, score };
-  });
-
-  ranked.sort((a, b) => b.score - a.score);
-
   return res.status(200).json({
     message: "Search results",
     query,
-    totalResults: ranked.length,
-    data: paginated,
+    totalResults: blogs.length,
+    data: blogs,
     pagination: {
       currentPage: page,
-      totalPages: Math.ceil(ranked.length / limit),
+      totalPages: Math.ceil(blogs.length / limit),
       limit,
     },
   });
 });
+
+
