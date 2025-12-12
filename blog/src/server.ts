@@ -10,6 +10,7 @@ import { isAuthenticatedMiddleware } from "./middlewares/isAuthenticatedMiddlewa
 import cookieParser from "cookie-parser";
 import { createClient } from "redis";
 import { blogLimiter } from "./ratelimiter/blogs.ratelimiter.js";
+import { generalLimiter } from "./ratelimiter/general.ratelimiter.js";
 
 // Initialize Redis client
 export const redisClient = createClient({
@@ -37,8 +38,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use("/api/blog", blogLimiter, isAuthenticatedMiddleware, blogRoutes);
-app.use("/api/comment", isAuthenticatedMiddleware, commentRoutes);
-app.use("/api/user", isAuthenticatedMiddleware, userRoutes);
+app.use("/api/comment", generalLimiter, isAuthenticatedMiddleware, commentRoutes);
+app.use("/api/user", generalLimiter, isAuthenticatedMiddleware, userRoutes);
 
 app.use(errorHandler);
 
