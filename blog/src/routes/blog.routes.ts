@@ -6,9 +6,12 @@ import {
   deleteBlogController,
   getAllUserBlogsController,
   getBlogByIdController,
-  getRecommendedBlogsController,
-  searchBlogsController
+  incrementShareBlogController
 } from "../controllers/blog.controllers.js";
+import {
+  getRecommendedBlogsController,
+  searchBlogsController,
+} from "../controllers/recommendation.controllers.js";
 import {
   likeBlogController,
   dislikeBlogController,
@@ -16,7 +19,7 @@ import {
 
 const blogRoutes = Router();
 
-blogRoutes.get("/search", searchBlogsController)
+blogRoutes.get("/search", searchBlogsController);
 
 blogRoutes.get("/get/:id", getBlogByIdController);
 
@@ -34,6 +37,6 @@ blogRoutes.post("/like/:id", likeBlogController);
 
 blogRoutes.post("/dislike/:id", dislikeBlogController);
 
+blogRoutes.post("/share/:id", incrementShareBlogController);
+
 export default blogRoutes;
-
-
