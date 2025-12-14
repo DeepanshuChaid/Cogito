@@ -18,3 +18,4 @@ commentRoutes.get("/get/blog/:blogId", getCommentsController)
 
 
 export default commentRoutes;
+

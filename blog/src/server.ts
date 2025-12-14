@@ -11,6 +11,7 @@ import cookieParser from "cookie-parser";
 import { createClient } from "redis";
 import { blogLimiter } from "./ratelimiter/blogs.ratelimiter.js";
 import { generalLimiter } from "./ratelimiter/general.ratelimiter.js";
+import { rateLimit } from "./ratelimiter/bucket.ratelimiter.js";
 
 // Initialize Redis client
 export const redisClient = createClient({
@@ -37,9 +38,25 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.use("/api/blog", blogLimiter, isAuthenticatedMiddleware, blogRoutes);
-app.use("/api/comment", generalLimiter, isAuthenticatedMiddleware, commentRoutes);
-app.use("/api/user", generalLimiter, isAuthenticatedMiddleware, userRoutes);
+app.use(
+  "/api/blog",
+  isAuthenticatedMiddleware,
+  rateLimit({capacity: 50, refillPerSecond: 0.8,}),
+  blogRoutes
+);
+
+app.use(
+  "/api/comment",
+  rateLimit({capacity: 10, refillPerSecond: 0.5,}), 
+  isAuthenticatedMiddleware,
+  commentRoutes
+);
+app.use(
+  "/api/user",
+  rateLimit({capacity: 10, refillPerSecond: 0.4,}), 
+  isAuthenticatedMiddleware, 
+  userRoutes
+);
 
 app.use(errorHandler);
 

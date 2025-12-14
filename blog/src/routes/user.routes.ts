@@ -10,3 +10,4 @@ userRoutes.get("/save/blog/all", getSavedBlogsController)
 userRoutes.delete("/delete/save/blog/:id", deleteSavedBlogController)
 
 export default userRoutes
+
