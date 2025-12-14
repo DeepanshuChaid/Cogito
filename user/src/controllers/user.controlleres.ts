@@ -81,7 +81,6 @@ export const registerUserController = asyncHandler(
     const cacheKey = `user_data:${user.id}`;
 
     await redisClient.set(cacheKey, JSON.stringify(user), { EX: 3600 });
-    
 
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
@@ -103,15 +102,15 @@ export const getUserDataController = asyncHandler(
     // REDIS :- CACHE USER DATA
     const cacheKey = `user_data:${req.user.id}`;
 
-    const cachedData = await redisClient.get(cacheKey)
+    const cachedData = await redisClient.get(cacheKey);
 
-    if  (cachedData) {
-      console.log("USER DATA: Serving from cache")
+    if (cachedData) {
+      console.log("USER DATA: Serving from cache");
 
       return res.status(200).json({
         message: "Successfully User Data Fetched",
-        user: JSON.parse(cachedData)
-      })
+        user: JSON.parse(cachedData),
+      });
     }
 
     const user = await prisma.user.findFirst({
@@ -144,10 +143,9 @@ export const updateUserDataController = asyncHandler(
 
     if (!user) throw new Error("User not found");
 
-
     const cacheKey = `user_data:${userId}`;
 
-    await redisClient.del(cacheKey)
+    await redisClient.del(cacheKey);
 
     // REDIS :- CACHE USER DATA
     await redisClient.set(cacheKey, JSON.stringify(user), { EX: 3600 });
@@ -162,10 +160,14 @@ export const updateUserDataController = asyncHandler(
 // LOGOUT USER CONTROLLER
 export const logoutUserController = asyncHandler(
   async (req: Request, res: Response) => {
-    
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
-    res.clearCookie("session");
+
+    if (req.session) {
+      req.logout((err) => {
+        if (err) throw new Error("Error logging out");
+      });
+    }
 
     res.status(200).json({ message: "Logged out successfully" });
   },
@@ -199,9 +201,9 @@ export const updateProfilePictureController = asyncHandler(
       data: { profilePicture: cloud.secure_url },
     });
 
-    const cacheKey = `user_data:${userId}`
+    const cacheKey = `user_data:${userId}`;
 
-    await redisClient.del(cacheKey)
+    await redisClient.del(cacheKey);
 
     // REDIS :- CACHE USER DATA
     await redisClient.set(cacheKey, JSON.stringify(user), { EX: 3600 });
@@ -210,5 +212,51 @@ export const updateProfilePictureController = asyncHandler(
       message: "Profile Picture Updated Successfully",
       user,
     });
+  },
+);
+
+export const getOtherUserDataController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const email = req.params.email;
+
+    const cacheKey = `other_user_data:${email}`;
+
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log("OTHER USER DATA: Serving from cache");
+      return res.status(200).json({
+        message: "Successfully User Data Fetched",
+        CACHED: true,
+        user: JSON.parse(cachedData),
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profilePicture: true,
+        bio: true,
+        instagram: true,
+        facebook: true,
+        _count: {
+          select: {
+            followers: true,
+            following: true
+          },
+        }
+      }
+    });
+
+    if (!user) throw new Error("User not found");
+
+    await redisClient.set(cacheKey, JSON.stringify(user), { EX: 60 });
+
+    return res.status(200).json({
+      message: "Successfully User Data Fetched",
+      user,
+    })
   },
 );
