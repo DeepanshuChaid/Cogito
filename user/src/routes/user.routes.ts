@@ -5,7 +5,8 @@ import {
   registerUserController,
   updateUserDataController,
   logoutUserController,
-  updateProfilePictureController
+  updateProfilePictureController,
+  getOtherUserDataController
 } from "../controllers/user.controlleres.js";
 import { isAuthenticatedMiddleware } from "../middlewares/isAuthenticatedMiddleware.js";
 import passport from "../configs/passport.config.js";

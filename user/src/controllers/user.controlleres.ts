@@ -133,12 +133,12 @@ export const getUserDataController = asyncHandler(
 // UPDATE USER DATA CONTROLLER
 export const updateUserDataController = asyncHandler(
   async (req: Request, res: Response) => {
-    const { name, instagram, facebook, bio, profilePicture } = req.body;
+    const { name, instagram, facebook, bio } = req.body;
     const userId = req.user?.id;
 
     const user = await prisma.user.update({
       where: { id: userId },
-      data: { name, instagram, facebook, bio, profilePicture },
+      data: { name, instagram, facebook, bio },
     });
 
     if (!user) throw new Error("User not found");
@@ -158,7 +158,8 @@ export const updateUserDataController = asyncHandler(
 );
 
 // LOGOUT USER CONTROLLER
-export const logoutUserController = asyncHandler(
+export const 
+  logoutUserController = asyncHandler(
   async (req: Request, res: Response) => {
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
@@ -236,7 +237,6 @@ export const getOtherUserDataController = asyncHandler(
       select: {
         id: true,
         name: true,
-        email: true,
         profilePicture: true,
         bio: true,
         instagram: true,
@@ -247,7 +247,7 @@ export const getOtherUserDataController = asyncHandler(
             following: true
           },
         }
-      }
+      },
     });
 
     if (!user) throw new Error("User not found");
