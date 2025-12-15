@@ -18,7 +18,7 @@ export const loginUserController = asyncHandler(async (req, res) => {
             accounts: true,
         },
     });
-    if (!user.password)
+    if (!user?.password)
         throw new Error("User has no password");
     if (!user)
         throw new Error("User not found");
@@ -152,9 +152,10 @@ export const updateProfilePictureController = asyncHandler(async (req, res) => {
         user,
     });
 });
+// GET OTHER USER DATA CONTROLLER
 export const getOtherUserDataController = asyncHandler(async (req, res) => {
-    const email = req.params.email;
-    const cacheKey = `other_user_data:${email}`;
+    const name = req.params.name;
+    const cacheKey = `other_user_data:${name}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
         console.log("OTHER USER DATA: Serving from cache");
@@ -165,7 +166,7 @@ export const getOtherUserDataController = asyncHandler(async (req, res) => {
         });
     }
     const user = await prisma.user.findUnique({
-        where: { email },
+        where: { name },
         select: {
             id: true,
             name: true,

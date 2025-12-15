@@ -1,5 +1,6 @@
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
+import blogRoutes from "../routes/blog.routes.js";
 
 export const saveBlogController = asyncHandler(async (req, res) => {
   const userId = req.user?.id;
@@ -108,8 +109,25 @@ export const deleteSavedBlogController = asyncHandler(async (req, res) => {
 
 
 
+// GET OTHER USER BLOGS CONTROLLER
+export const getOtherUserBlogsController = asyncHandler(async (req, res) => {
+  const userId = req.params.id
+  const name = req.params.name
 
+  const page = parseInt(req.query.page as string) || 1
+  const limit = parseInt(req.query.limit as string) || 10
 
+  const skip = (page - 1) * limit
+
+  const blogs = await prisma.blog.findMany({
+    where: { name },
+    skip,
+    take: limit,
+    _count: {select: {comments: true}},
+  })
+
+  
+})
 
 
 

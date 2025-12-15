@@ -90,6 +90,9 @@ model Blog {
   views  Int @default(0)
   shares Int @default(0)
 
+  likesCount Int @default(0)
+  dislikesCount Int @default(0)
+
   engagementScore  Float   @default(0)
 
   blogReaction Blogreaction[]

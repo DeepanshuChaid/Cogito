@@ -14,7 +14,7 @@ userRoutes.get("/current", isAuthenticatedMiddleware, getUserDataController);
 // Logout route
 userRoutes.post("/logout", isAuthenticatedMiddleware, logoutUserController);
 // get other user data
-userRoutes.get("/other/:email", isAuthenticatedMiddleware, getOtherUserDataController);
+userRoutes.get("/profile/:name", isAuthenticatedMiddleware, getOtherUserDataController);
 // Login route - THIS IS WHERE YOU ADD SCOPE
 userRoutes.get("/google", passport.authenticate("google", {
     scope: ["profile", "email"], // ✅ Scope goes here
