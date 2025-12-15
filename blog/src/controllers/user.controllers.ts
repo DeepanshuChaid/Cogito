@@ -1,6 +1,7 @@
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
 import blogRoutes from "../routes/blog.routes.js";
+import { redisClient } from "../server.js";
 
 export const saveBlogController = asyncHandler(async (req, res) => {
   const userId = req.user?.id;
@@ -116,17 +117,109 @@ export const getOtherUserBlogsController = asyncHandler(async (req, res) => {
 
   const page = parseInt(req.query.page as string) || 1
   const limit = parseInt(req.query.limit as string) || 10
+  const cacheKey = `other_user_blogs:${userId}:page:${page}:limit:${limit}`
+  
+  const skip = (page - 1) * limit
+
+  const cachedData = await redisClient.get(cacheKey)
+
+  if (cachedData) {
+    console.log("OTHER USER BLOGS: Serving from cache")
+    return res.status(200).json({
+      message: "Successfully User Blogs Fetched",
+      CACHED: true,
+      data: JSON.parse(cachedData)
+    })
+  }
+  
+  const blogs = await prisma.blog.findMany({
+    where: {
+      author: {
+        name: name, 
+      },
+    },
+    skip,
+    take: limit,
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      createdAt: true,
+
+      _count: {
+        select: {
+          comments: true,
+          savedBlogs: true
+        },
+      },
+
+    },
+  })
+
+  if (!blogs) throw new Error("No blogs found")
+
+  await redisClient.set(cacheKey, JSON.stringify(blogs), { EX: 300 })
+
+  
+  return res.status(200).json({
+    message: "Successfully User Blogs Fetched",
+    data: blogs,
+    pagination: {
+      page,
+      limit,
+    }
+  })
+})
+
+
+// GET OTHER USER SAVED BLOGS CONTROLLER
+export const getOtherUserSavedBlogsController = asyncHandler(async (req, res) => {
+  const userId = req.params.id
+  const name = req.params.name
+
+  const page = parseInt(req.query.page as string) || 1
+  const limit = parseInt(req.query.limit as string) || 10
+
+  const cacheKey = `other_user_saved_blogs:${userId}:page:${page}:limit:${limit}`
 
   const skip = (page - 1) * limit
 
-  const blogs = await prisma.blog.findMany({
-    where: { name },
-    skip,
-    take: limit,
-    _count: {select: {comments: true}},
-  })
+  const cachedData = await redisClient.get(cacheKey)
 
-  
+  if (cachedData) {
+    console.log("OTHER USER SAVED BLOGS: Serving from cache")
+    return res.status(200).json({
+      message: "Successfully User Saved Blogs Fetched",
+      CACHED: true,
+      data: JSON.parse(cachedData)
+    })
+  }
+
+    const savedBlogs = await prisma.savedblogs.findMany({
+      where: { user: { name } },
+      skip,
+      take: limit,
+      _count: {
+        select: {
+          comments: true,
+          savedBlogs: true
+        },
+      }
+    })
+
+    if (!savedBlogs) throw new Error("No saved blogs found")
+
+    await redisClient.set(cacheKey, JSON.stringify(savedBlogs), { EX: 300 })
+
+    return res.status(200).json({
+      message: "Successfully User Saved Blogs Fetched",
+      data: savedBlogs,
+      pagination: {
+        page,
+        limit
+      }
+    })
+  }
 })
 
 

@@ -60,11 +60,6 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
     where: { id: blogId },
     include: {
       author: true,
-      blogReaction: {
-        select: {
-          type: true,
-        },
-      },
       _count: {
         select: { comments: true, savedBlogs: true },
       },
@@ -89,11 +84,6 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
       data: { views: { increment: 1 }, engagementScore: { increment: 0.5 } },
       include: {
         author: true,
-        blogReaction: {
-          select: {
-            type: true,
-          },
-        },
         _count: {
           select: { comments: true, savedBlogs: true },
         },
@@ -211,11 +201,6 @@ export const updateBlogController = asyncHandler(async (req, res) => {
     where: { id: blogId },
     include: {
       author: true,
-      blogReaction: {
-        select: {
-          type: true,
-        },
-      },
       _count: {
         select: { comments: true, savedBlogs: true },
       },
@@ -290,11 +275,6 @@ export const getAllUserBlogsController = asyncHandler(async (req, res) => {
     },
     include: {
       author: true,
-      blogReaction: {
-        select: {
-          type: true,
-        },
-      },
       _count: {
         select: { comments: true, savedBlogs: true},
       },
