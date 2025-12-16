@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getUserDataController, loginUserController, registerUserController, updateUserDataController, logoutUserController, updateProfilePictureController, getOtherUserDataController } from "../controllers/user.controlleres.js";
+import { getUserDataController, loginUserController, registerUserController, updateUserDataController, logoutUserController, updateProfilePictureController, getProfileUserDataController } from "../controllers/user.controlleres.js";
 import { isAuthenticatedMiddleware } from "../middlewares/isAuthenticatedMiddleware.js";
 import passport from "../configs/passport.config.js";
 import { generateAccessToken, generateRefreshToken, } from "../utils/token.utils.js";
@@ -14,7 +14,7 @@ userRoutes.get("/current", isAuthenticatedMiddleware, getUserDataController);
 // Logout route
 userRoutes.post("/logout", isAuthenticatedMiddleware, logoutUserController);
 // get other user data
-userRoutes.get("/profile/:name", isAuthenticatedMiddleware, getOtherUserDataController);
+userRoutes.get("/profile/:name", isAuthenticatedMiddleware, getProfileUserDataController);
 // Login route - THIS IS WHERE YOU ADD SCOPE
 userRoutes.get("/google", passport.authenticate("google", {
     scope: ["profile", "email"], // ✅ Scope goes here

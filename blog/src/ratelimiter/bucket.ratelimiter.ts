@@ -46,7 +46,11 @@ export const rateLimit = ({
 
     const allowed = await redisClient.eval(luaScript, {
       keys: [key],
-      arguments: [capacity, refillRate, now],
+      arguments: [
+        capacity.toString(),
+        refillRate.toString(),
+        now.toString(),
+      ],
     });
 
     if (!allowed) {

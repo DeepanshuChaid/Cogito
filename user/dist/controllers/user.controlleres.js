@@ -80,7 +80,6 @@ export const getUserDataController = asyncHandler(async (req, res) => {
     }
     const user = await prisma.user.findFirst({
         where: { id: req.user.id },
-        include: { accounts: true },
     });
     if (!user)
         throw new Error("User not found");
@@ -152,8 +151,8 @@ export const updateProfilePictureController = asyncHandler(async (req, res) => {
         user,
     });
 });
-// GET OTHER USER DATA CONTROLLER
-export const getOtherUserDataController = asyncHandler(async (req, res) => {
+// GET PROFILE USER DATA CONTROLLER
+export const getProfileUserDataController = asyncHandler(async (req, res) => {
     const name = req.params.name;
     const cacheKey = `other_user_data:${name}`;
     const cachedData = await redisClient.get(cacheKey);
