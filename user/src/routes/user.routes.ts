@@ -6,7 +6,7 @@ import {
   updateUserDataController,
   logoutUserController,
   updateProfilePictureController,
-  getOtherUserDataController
+  getProfileUserDataController
 } from "../controllers/user.controlleres.js";
 import { isAuthenticatedMiddleware } from "../middlewares/isAuthenticatedMiddleware.js";
 import passport from "../configs/passport.config.js";
@@ -34,7 +34,7 @@ userRoutes.get("/current", isAuthenticatedMiddleware, getUserDataController);
 userRoutes.post("/logout", isAuthenticatedMiddleware,  logoutUserController);
 
 // get other user data
-userRoutes.get("/profile/:name", isAuthenticatedMiddleware, getOtherUserDataController)
+userRoutes.get("/profile/:name", isAuthenticatedMiddleware, getProfileUserDataController)
 
 
 // Login route - THIS IS WHERE YOU ADD SCOPE

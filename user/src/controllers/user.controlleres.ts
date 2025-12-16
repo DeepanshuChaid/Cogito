@@ -115,7 +115,6 @@ export const getUserDataController = asyncHandler(
 
     const user = await prisma.user.findFirst({
       where: { id: req.user.id },
-      include: { accounts: true },
     });
 
     if (!user) throw new Error("User not found");
@@ -216,8 +215,8 @@ export const updateProfilePictureController = asyncHandler(
   },
 );
 
-// GET OTHER USER DATA CONTROLLER
-export const getOtherUserDataController = asyncHandler(
+// GET PROFILE USER DATA CONTROLLER
+export const getProfileUserDataController = asyncHandler(
   async (req: Request, res: Response) => {
     const name = req.params.name;
 
