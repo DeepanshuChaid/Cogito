@@ -9,7 +9,7 @@ import "dotenv/config";
 import { isAuthenticatedMiddleware } from "./middlewares/isAuthenticatedMiddleware.js";
 import cookieParser from "cookie-parser";
 import { createClient } from "redis";
-import { blogLimiter } from "./ratelimiter/blogs.ratelimiter.js";
+import { rateLimit } from "./ratelimiter/bucket.ratelimiter.js";
 // Initialize Redis client
 export const redisClient = createClient({
     url: process.env.REDIS_URL_UPSTASH,
@@ -30,9 +30,9 @@ cloudinary.config({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use("/api/blog", blogLimiter, isAuthenticatedMiddleware, blogRoutes);
-app.use("/api/comment", isAuthenticatedMiddleware, commentRoutes);
-app.use("/api/user", isAuthenticatedMiddleware, userRoutes);
+app.use("/api/blog", isAuthenticatedMiddleware, rateLimit({ capacity: 50, refillPerSecond: 0.8, }), blogRoutes);
+app.use("/api/comment", rateLimit({ capacity: 10, refillPerSecond: 0.5, }), isAuthenticatedMiddleware, commentRoutes);
+app.use("/api/user", rateLimit({ capacity: 10, refillPerSecond: 0.4, }), isAuthenticatedMiddleware, userRoutes);
 app.use(errorHandler);
 app.get("/", (req, res) => {
     res.send("hello world author service");
@@ -48,5 +48,7 @@ app.listen(PORT, async () => {
     console.log(blog);
     const redisKeys = await redisClient.keys("blog:*");
     console.log("checking redis keys", redisKeys);
+    const totalSavedBlogs = await prisma.savedblogs.count({ where: { user: { name: "Cogito2509" } } });
+    console.log("THIS IS THE BLOGS SAVED BY THE PROD DEV:- ", totalSavedBlogs);
     // console.log(idk)
 });
