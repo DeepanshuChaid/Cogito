@@ -68,7 +68,7 @@ export const deleteSavedBlogController = asyncHandler(async (req, res) => {
     });
 });
 // GET SAVED BLOGS BY USERNAME CONTROLLER
-export const getSavedBlogsController = asyncHandler(async (req, res) => {
+export const getSavedBlogsUsernameController = asyncHandler(async (req, res) => {
     const name = req.params.name;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -110,7 +110,6 @@ export const getSavedBlogsController = asyncHandler(async (req, res) => {
                     _count: {
                         select: {
                             comments: true,
-                            savedblogs: true,
                             blogReaction: true,
                         },
                     },
@@ -145,4 +144,9 @@ export const getSavedBlogsController = asyncHandler(async (req, res) => {
         message: "User saved blogs fetched successfully",
         data: response,
     });
+});
+// *************************** //
+// GET BLOGS BY USERNAME CONTROLLER
+// *************************** //
+export const getBlogsByUsernameController = asyncHandler(async (req, res) => {
 });

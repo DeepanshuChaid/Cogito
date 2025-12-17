@@ -1,14 +1,21 @@
 import { Router } from "express";
 import {
   deleteSavedBlogController,
-  getSavedBlogsController,
-  saveBlogController, 
+  getSavedBlogsByUsernameController,
+  saveBlogController,
+  getBlogsByUsernameController
 } from "../controllers/user.controllers.js";
 
 const userRoutes = Router();
 
 userRoutes.post("/save/blog/:id", saveBlogController);
+
+
 userRoutes.delete("/delete/save/blog/:id", deleteSavedBlogController);
-userRoutes.get("/profile/:name/saved-blogs", getSavedBlogsController); // Only one GET route
+
+
+userRoutes.get("/profile/:name/saved-blogs", getSavedBlogsByUsernameController);
+
+userRoutes.get("/profile/:name/blogs", getBlogsByUsernameController)
 
 export default userRoutes;

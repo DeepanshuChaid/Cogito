@@ -48,7 +48,7 @@ app.listen(PORT, async () => {
     console.log(blog);
     const redisKeys = await redisClient.keys("blog:*");
     console.log("checking redis keys", redisKeys);
-    const totalSavedBlogs = await prisma.savedblogs.count({ where: { user: { name: "Cogito2509" } } });
+    const totalSavedBlogs = await prisma.savedblogs.count({ where: { user: { name: "Cogito25" } } });
     console.log("THIS IS THE BLOGS SAVED BY THE PROD DEV:- ", totalSavedBlogs);
     // console.log(idk)
 });

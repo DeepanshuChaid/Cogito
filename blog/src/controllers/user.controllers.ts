@@ -6,6 +6,8 @@ export const saveBlogController = asyncHandler(async (req, res) => {
   const userId = req?.user?.id;
   const blogId = req.params.id;
 
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
   const blog = await prisma.blog.findUnique({ where: { id: blogId } });
 
   if (!blog) throw new Error("Blog not found");
@@ -45,8 +47,10 @@ export const saveBlogController = asyncHandler(async (req, res) => {
 //  DELETE SAVED BLOG CONTROLLER
 //  *************************** //
 export const deleteSavedBlogController = asyncHandler(async (req, res) => {
-  const userId = req.user?.id;
+  const userId = req?.user?.id;
   const blogId = req.params.id;
+
+  if (!userId) return res.status(401).json({ message: "Unauthorized" })
 
   const blog = await prisma.blog.findUnique({ where: { id: blogId } });
   if (!blog) throw new Error("Blog not found");
@@ -81,58 +85,119 @@ export const deleteSavedBlogController = asyncHandler(async (req, res) => {
 });
 
 // GET SAVED BLOGS BY USERNAME CONTROLLER
-export const getSavedBlogsController = asyncHandler(async (req, res) => {
-  const name = req.params.name;
+export const getSavedBlogsByUsernameController = asyncHandler(async (req, res) => {
+    const name = req.params.name;
 
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
-  const skip = (page - 1) * limit;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
 
-  // Cache key for public view
-  const cacheKey = `saved_blogs:${name}:page:${page}:limit:${limit}`;
+    // Cache key for public view
+    const cacheKey = `saved_blogs:${name}:page:${page}:limit:${limit}`;
 
-  const cachedData = await redisClient.get(cacheKey);
+    const cachedData = await redisClient.get(cacheKey);
 
-  if (cachedData) {
+    if (cachedData) {
+      return res.status(200).json({
+        message: "User saved blogs fetched successfully",
+        CACHED: true,
+        data: JSON.parse(cachedData),
+      });
+    }
+
+    // CORRECT QUERY: Get saved blogs through the user relationship
+    const savedBlogs = await prisma.savedblogs.findMany({
+      where: {
+        user: { name: name },
+      },
+      skip,
+      take: limit,
+      include: {
+        blog: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                name: true,
+                profilePicture: true,
+              },
+            },
+            _count: {
+              select: {
+                comments: true,
+                blogReaction: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    const totalSavedBlogs = await prisma.savedblogs.count({
+      where: {
+        user: { name: name }, // ✅ Correct count
+      },
+    });
+
+    const response = {
+      savedBlogs,
+      pagination: {
+        page,
+        limit,
+        total: totalSavedBlogs,
+        totalPages: Math.ceil(totalSavedBlogs / limit),
+      },
+    };
+
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: 300 });
+
     return res.status(200).json({
       message: "User saved blogs fetched successfully",
+      data: response,
+    });
+  });
+
+// *************************** //
+// GET BLOGS BY USERNAME CONTROLLER
+// *************************** //
+export const getBlogsByUsernameController = asyncHandler(async (req, res) => {
+  const name = req.params.name;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+
+  const cacheKey = `user_blogs:${name}:page:${page}:limit:${limit}`;
+
+  const cachedData = await redisClient.get(cacheKey);
+  if (cachedData) {
+    return res.status(200).json({
+      message: "User blogs fetched successfully",
       CACHED: true,
       data: JSON.parse(cachedData),
     });
   }
 
-  // Check if user exists first
-  const user = await prisma.user.findUnique({
-    where: { name },
-    select: { id: true, name: true, profilePicture: true },
-  });
+  const skip = (page - 1) * limit;
 
-  if (!user) throw new Error("User not found");
-
-  // CORRECT QUERY: Get saved blogs through the user relationship
-  const savedBlogs = await prisma.savedblogs.findMany({
-    where: {
-      user: { name: name }, 
-    },
+  // Get blogs by username
+  const blogs = await prisma.blog.findMany({
+    where: { author: { name } },
     skip,
     take: limit,
     include: {
-      blog: {
-        include: {
-          author: {
-            select: {
-              id: true,
-              name: true,
-              profilePicture: true,
-            },
-          },
-          _count: {
-            select: {
-              comments: true,
-              savedblogs: true,
-              blogReaction: true,
-            },
-          },
+      author: {
+        select: {
+          id: true,
+          name: true,
+          profilePicture: true,
+        },
+      },
+      _count: {
+        select: {
+          comments: true,
+          blogReaction: true,
         },
       },
     },
@@ -141,31 +206,24 @@ export const getSavedBlogsController = asyncHandler(async (req, res) => {
     },
   });
 
-  const totalSavedBlogs = await prisma.savedblogs.count({
-    where: {
-      user: { name: name }, // ✅ Correct count
-    },
+  const totalBlogs = await prisma.blog.count({
+    where: { author: { name } },
   });
 
   const response = {
-    user: {
-      id: user.id,
-      name: user.name,
-      avatar: user.profilePicture,
-    },
-    savedBlogs,
+    blogs,
     pagination: {
       page,
       limit,
-      total: totalSavedBlogs,
-      totalPages: Math.ceil(totalSavedBlogs / limit),
+      total: totalBlogs,
+      totalPages: Math.ceil(totalBlogs / limit),
     },
   };
 
   await redisClient.set(cacheKey, JSON.stringify(response), { EX: 300 });
 
   return res.status(200).json({
-    message: "User saved blogs fetched successfully",
+    message: "User blogs fetched successfully",
     data: response,
   });
 });
