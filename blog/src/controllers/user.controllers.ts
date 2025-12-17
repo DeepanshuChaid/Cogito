@@ -227,3 +227,81 @@ export const getBlogsByUsernameController = asyncHandler(async (req, res) => {
     data: response,
   });
 });
+
+
+//  *************************** //
+//  GET LIKED BLOGS BY USERNAME CONTROLLER
+//  *************************** //
+export const getLikedBlogsByUsernameController = asyncHandler(async (req, res) => {
+  const name = req.params.name;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+
+  const cacheKey = `liked_blogs:${name}:page:${page}:limit:${limit}`;
+   const cachedData = await redisClient.get(cacheKey);
+  if (cachedData) {
+    return res.status(200).json({
+      message: "User liked blogs fetched successfully",
+      CACHED: true,
+      data: JSON.parse(cachedData),
+    });
+  }
+
+  const skip = (page - 1) * limit;
+
+
+  const likedBlogs = await prisma.blogreaction.findMany({
+    where: {
+      user: { name },
+      type: "LIKE",
+    },
+    skip,
+    take: limit,
+    include: {
+      blog: {
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              profilePicture: true,
+            },
+          },
+          _count: {
+            select: {
+              comments: true,
+              blogReaction: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  })
+
+  const totalLikedBlogs = await prisma.blogreaction.count({
+    where: {
+      user: { name },
+      type: "LIKE",
+    }
+  })
+
+  const response = {
+    likedBlogs,
+    pagination: {
+      page,
+      limit,
+      total: totalLikedBlogs,
+      totalPages: Math.ceil(totalLikedBlogs / limit),
+    }
+  }
+
+  await redisClient.set(cacheKey, JSON.stringify(response), { EX: 300 })
+
+  return res.status(200).json({
+    message: "User liked blogs fetched successfully",
+    data: response
+  })
+})
