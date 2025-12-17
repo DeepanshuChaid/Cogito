@@ -35,15 +35,7 @@ export const followToggleController = asyncHandler(async (req, res) => {
     // UNFOLLOW
     await prisma.follow.delete({
       where: {
-        followerId_followingId: {
-          followerId,
-          followingId: targetUser.id,
-        },
-      },
-    });
-
-    return res.status(200).json({
-      success: true,
+        follower
       action: "UNFOLLOWED",
       following: false,
       user: targetUser.name,
