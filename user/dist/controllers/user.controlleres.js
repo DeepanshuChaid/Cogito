@@ -183,7 +183,7 @@ export const getProfileUserDataController = asyncHandler(async (req, res) => {
     });
     if (!user)
         throw new Error("User not found");
-    await redisClient.set(cacheKey, JSON.stringify(user), { EX: 60 });
+    await redisClient.set(cacheKey, JSON.stringify(user), { EX: 300 });
     return res.status(200).json({
         message: "Successfully User Data Fetched",
         user,

@@ -216,8 +216,7 @@ export const updateProfilePictureController = asyncHandler(
 );
 
 // GET PROFILE USER DATA CONTROLLER
-export const getProfileUserDataController = asyncHandler(
-  async (req: Request, res: Response) => {
+export const getProfileUserDataController = asyncHandler(async (req: Request, res: Response) => {
     const name = req.params.name;
 
     const cacheKey = `other_user_data:${name}`;
@@ -252,14 +251,13 @@ export const getProfileUserDataController = asyncHandler(
 
     if (!user) throw new Error("User not found");
 
-    await redisClient.set(cacheKey, JSON.stringify(user), { EX: 60 });
+    await redisClient.set(cacheKey, JSON.stringify(user), { EX: 300 });
 
     return res.status(200).json({
       message: "Successfully User Data Fetched",
       user,
     })
-  },
-);
+  });
 
 
 

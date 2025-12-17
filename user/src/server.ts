@@ -10,6 +10,7 @@ import session from "express-session";
 import { isAuthenticatedMiddleware } from "./middlewares/isAuthenticatedMiddleware.js";
 import { v2 as cloudinary } from "cloudinary";
 import {createClient} from "redis"
+import followRoutes from "./routes/follow.routes.js";
 
 export const redisClient = createClient({
   url: process.env.REDIS_URL_UPSTASH,
@@ -64,6 +65,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use("/api/user", userRoutes);
+app.use("/api/user", isAuthenticatedMiddleware, followRoutes)
 
 app.use(errorHandler);
 
