@@ -1,59 +1,278 @@
-import { asyncHandler } from "../middlewares/asyncHandler.js";
-import prisma from "../prisma.js";
+🧠 Cogito
 
-export const followToggleController = asyncHandler(async (req, res) => {
-  const followerId = req.user?.id;        // logged-in user
-  const targetName = req.params.name;     // profile being visited
+A modern, scalable blogging platform focused on thoughtful content, performance, and clean system design.
 
-  if (!followerId) throw new Error("Unauthorized");
+Cogito is built to handle real-world usage: user authentication, blogs, reactions, comments, follows, saves, rate limiting, and caching — without over-engineering.
 
-  // 1. Fetch target user (minimal select for speed)
-  const targetUser = await prisma.user.findUnique({
-    where: { name: targetName },
-    select: { id: true, name: true },
-  });
 
-  if (!targetUser) throw new Error("User not found");
+---
 
-  // 2. Prevent self-follow
-  if (targetUser.id === followerId) {
-    throw new Error("You cannot follow yourself");
-  }
+✨ Features
 
-  // 3. Check if already following
-  const existingFollow = await prisma.follow.findUnique({
-    where: {
-      followerId_followingId: {
-        followerId,
-        followingId: targetUser.id,
-      },
-    },
-  });
+📝 Blogging
 
-  // 4. TOGGLE LOGIC
-  if (existingFollow) {
-    // UNFOLLOW
-    await prisma.follow.delete({
-      where: {
-        follower
-      action: "UNFOLLOWED",
-      following: false,
-      user: targetUser.name,
-    });
-  }
+Create, update, and delete blogs
 
-  // FOLLOW
-  await prisma.follow.create({
-    data: {
-      followerId,
-      followingId: targetUser.id,
-    },
-  });
+Rich blog content support
 
-  return res.status(201).json({
-    success: true,
-    action: "FOLLOWED",
-    following: true,
-    user: targetUser.name,
-  });
-});
+Blog categories (tech, business, lifestyle, education, etc.)
+
+Blog images via Cloudinary
+
+
+❤️ Engagement
+
+Like / Dislike system (one reaction per user per blog)
+
+Save / Unsave blogs
+
+Engagement score for ranking
+
+View counts & shares
+
+
+💬 Comments
+
+Nested comments (replies)
+
+Edit tracking (isEdited)
+
+Cascade deletes
+
+
+👥 Social
+
+Follow / Unfollow users (single toggle endpoint)
+
+Followers & following system
+
+Scales to hundreds of thousands of users
+
+
+🔐 Authentication
+
+Email & Google OAuth
+
+JWT-based authentication
+
+Secure cookie handling
+
+
+🚦 Rate Limiting
+
+Redis + Lua token bucket
+
+Per-user & per-IP limits
+
+Protects APIs from abuse
+
+
+⚡ Performance
+
+Redis caching for read-heavy endpoints
+
+Indexed PostgreSQL queries
+
+Transaction-safe writes
+
+
+
+---
+
+🏗️ Tech Stack
+
+Backend
+
+Node.js + Express
+
+PostgreSQL (relational data)
+
+Prisma ORM
+
+Redis (caching & rate limiting)
+
+Lua scripts (atomic rate limiter)
+
+
+Frontend
+
+React
+
+TanStack Query (server state)
+
+Modern component-based UI
+
+
+Cloud & Services
+
+Cloudinary – image storage
+
+Upstash Redis – managed Redis
+
+Vercel / Railway / Render – deployment
+
+
+
+---
+
+🗂️ Database Design (High Level)
+
+Main entities:
+
+User
+
+Blog
+
+Follow
+
+Comments
+
+Blogreaction
+
+Savedblogs
+
+
+Key design decisions:
+
+Join tables for follows, reactions, saves
+
+Unique constraints to prevent duplicates
+
+Indexed foreign keys for fast lookups
+
+Cascade deletes for data integrity
+
+
+
+---
+
+🔁 Follow System
+
+Single endpoint: POST /profile/:name/follow
+
+Automatically toggles follow / unfollow
+
+Backed by a unique DB constraint
+
+Race-condition safe
+
+
+This design scales to millions of follow relationships.
+
+
+---
+
+🔐 Rate Limiting Strategy
+
+Implemented using Redis + Lua:
+
+Token bucket algorithm
+
+One Redis call per request
+
+Atomic and extremely fast
+
+
+Limits:
+
+Blogs: higher capacity
+
+Comments & user routes: stricter limits
+
+
+
+---
+
+📦 API Highlights
+
+Blogs
+
+POST /api/blog – create blog
+
+GET /api/blog – fetch blogs
+
+POST /api/blog/:id/save – save blog
+
+
+Users
+
+POST /profile/:name/follow – follow/unfollow
+
+GET /profile/:name – public profile
+
+
+Comments
+
+POST /api/comment
+
+Nested replies supported
+
+
+
+---
+
+⚙️ Environment Variables
+
+PORT=5000
+DATABASE_URL=postgresql://...
+REDIS_URL_UPSTASH=redis://...
+JWT_SECRET=your_secret
+CLOUD_NAME=cloudinary_name
+CLOUD_API_KEY=cloudinary_key
+CLOUD_API_SECRET=cloudinary_secret
+
+
+---
+
+🚀 Scalability
+
+Cogito is designed to comfortably handle:
+
+500k+ registered users
+
+Millions of blogs & comments
+
+Tens of millions of follows & saves
+
+
+Scaling strategy:
+
+Horizontal API scaling
+
+Read-heavy optimization via Redis
+
+Database indexes instead of in-memory hacks
+
+
+
+---
+
+🧪 Local Development
+
+npm install
+npx prisma generate
+npx prisma migrate dev
+npm run dev
+
+
+---
+
+📌 Philosophy
+
+Cogito focuses on:
+
+Correct data modeling
+
+Simplicity over hype
+
+Real scalability, not fake system design
+
+Building things that won’t collapse later
+
+
+
+---
+
+👤 Author
+
+Built by Deepanshu chaid (Cogito) — full-stack developer & UX designer.
