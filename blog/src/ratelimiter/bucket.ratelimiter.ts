@@ -50,7 +50,7 @@ export const rateLimit = ({
         capacity.toString(),
         refillRate.toString(),
         now.toString(),
-      ],
+      ], 
     });
 
     if (!allowed) {
