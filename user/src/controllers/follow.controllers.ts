@@ -1,9 +1,12 @@
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
+import { redisClient } from "../server.js";
 
 export const followUserController = asyncHandler(async (req, res) => {
   const followerId = req.user?.id;        // logged-in user
   const targetName = req.params.name;     // profile being visited
+
+  const cacheKey = `other_user_data:${targetName}`;
 
   if (!followerId) throw new Error("Unauthorized");
 
@@ -42,6 +45,8 @@ export const followUserController = asyncHandler(async (req, res) => {
       },
     });
 
+    await redisClient.del(cacheKey);
+
     return res.status(200).json({
       success: true,
       message: "UNFOLLOWED",
@@ -57,6 +62,8 @@ export const followUserController = asyncHandler(async (req, res) => {
       followingId: targetUser.id,
     },
   });
+
+  await redisClient.del(cacheKey);
 
   return res.status(201).json({
     success: true,

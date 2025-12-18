@@ -83,6 +83,10 @@ app.listen(PORT, async () => {
   const totalSavedBlogs = await prisma.savedblogs.count({where : {user : {name: "Cogito25"}}})
   console.log("THIS IS THE BLOGS SAVED BY THE PROD DEV:- ", totalSavedBlogs)
 
+
+  const followRows = await prisma.follow.findMany();
+  console.log(followRows);
+
   // console.log(idk)
 });
 

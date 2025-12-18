@@ -27,8 +27,8 @@ model User {
   facebook  String?
   bio       String?
 
-  followers Follow[] @relation("follower")
-  following Follow[] @relation("following")
+  following Follow[] @relation("follower")
+  followers Follow[] @relation("following")
 
   blogReaction Blogreaction[]
 

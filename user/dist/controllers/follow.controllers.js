@@ -1,44 +1,63 @@
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
+import { redisClient } from "../server.js";
 export const followUserController = asyncHandler(async (req, res) => {
-    const userId = req.user?.id;
-    const followName = req.params.name;
-    if (!userId)
-        return res.status(401).json({ message: "Unauthorized" });
-    const followUser = await prisma.user.findUnique({
-        where: { name: followName },
+    const followerId = req.user?.id; // logged-in user
+    const targetName = req.params.name; // profile being visited
+    const cacheKey = `other_user_data:${targetName}`;
+    if (!followerId)
+        throw new Error("Unauthorized");
+    // 1. Fetch target user (minimal select for speed)
+    const targetUser = await prisma.user.findUnique({
+        where: { name: targetName },
+        select: { id: true, name: true },
     });
-    if (!followUser)
+    if (!targetUser)
         throw new Error("User not found");
-    if (followUser.id === userId)
-        throw new Error("You can't follow yourself");
-    const alreadyFollowing = await prisma.follow.findUnique({
+    // 2. Prevent self-follow
+    if (targetUser.id === followerId) {
+        throw new Error("You cannot follow yourself");
+    }
+    // 3. Check if already following
+    const existingFollow = await prisma.follow.findUnique({
         where: {
             followerId_followingId: {
-                followerId: userId,
-                followingId: followUser.id,
+                followerId,
+                followingId: targetUser.id,
             },
         },
     });
-    await prisma.follow.delete({
-        where: {
-            followerId: userId,
-            followingId: followUser.id,
-        },
-    });
-    if (alreadyFollowing) {
-        return res.status(400).json({
-            message: "Your unFollowed this user"
+    // 4. TOGGLE LOGIC
+    if (existingFollow) {
+        // UNFOLLOW
+        await prisma.follow.delete({
+            where: {
+                followerId_followingId: {
+                    followerId,
+                    followingId: targetUser.id,
+                },
+            },
+        });
+        await redisClient.del(cacheKey);
+        return res.status(200).json({
+            success: true,
+            message: "UNFOLLOWED",
+            following: false,
+            user: targetUser.name,
         });
     }
-    const follow = await prisma.follow.create({
+    // FOLLOW
+    await prisma.follow.create({
         data: {
-            followerId: userId,
-            followingId: followUser.id,
+            followerId,
+            followingId: targetUser.id,
         },
     });
+    await redisClient.del(cacheKey);
     return res.status(201).json({
-        message: "User followed successfully",
-        data: follow,
+        success: true,
+        message: "FOLLOWED",
+        following: true,
+        user: targetUser.name,
     });
 });

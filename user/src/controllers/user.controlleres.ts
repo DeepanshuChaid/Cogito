@@ -218,6 +218,7 @@ export const updateProfilePictureController = asyncHandler(
 // GET PROFILE USER DATA CONTROLLER
 export const getProfileUserDataController = asyncHandler(async (req: Request, res: Response) => {
     const name = req.params.name;
+    const userId = req.user?.id
 
     const cacheKey = `other_user_data:${name}`;
 
@@ -249,6 +250,21 @@ export const getProfileUserDataController = asyncHandler(async (req: Request, re
       },
     });
 
+  if (!user || !userId) throw new Error("User not found")
+
+    const isFollowing = await prisma.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId: userId,
+          followingId: user?.id,
+        },
+      },
+    })
+
+  if (isFollowing) {
+    user.isFollowing = true  
+  } else user.isFollowing = false
+  
     if (!user) throw new Error("User not found");
 
     await redisClient.set(cacheKey, JSON.stringify(user), { EX: 300 });
