@@ -50,16 +50,6 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
 
     const role = blog.authorId === userId ? "author" : "user";
 
-    const isReacted = await prisma.blogreaction.findUnique({
-      where: {
-        userId_blogId: {
-          userId: userId!,
-          blogId,
-        }
-      },
-    })
-
-    if (isReacted) blog.isReacted = isReacted
 
     return res.status(200).json({
       cached: true,
@@ -81,6 +71,29 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
   });
 
   if (!blog) throw new Error("Blog not found");
+
+  // Check if user has reacted to the blog
+    const isReacted = await prisma.blogreaction.findUnique({
+      where: {
+        userId_blogId: {
+          userId: userId!,
+          blogId,
+        }
+      },
+    })
+
+    if (isReacted) blog._reaction = isReacted
+
+  const isSaved = await prisma.savedblogs.findUnique({
+    where: {
+      userId_blogId: {
+        userId: userId!,
+        blogId,
+      }
+    }
+  }) 
+
+  if (isSaved) blog._saved = true
 
   // Cache it
   await redisClient.set(cacheKey, JSON.stringify(blog), { EX: 18000 });
@@ -108,6 +121,7 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
   }
 
   const role = blog.authorId === userId ? "author" : "user";
+  
 
   return res.status(200).json({
     cached: false,

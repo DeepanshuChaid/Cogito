@@ -41,7 +41,7 @@ app.use(cookieParser());
 app.use(
   "/api/blog",
   isAuthenticatedMiddleware,
-  rateLimit({capacity: 50, refillPerSecond: 0.8,}),
+  rateLimit({capacity: 32, refillPerSecond: 0.8,}),
   blogRoutes
 );
 
