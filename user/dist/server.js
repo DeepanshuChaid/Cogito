@@ -66,5 +66,4 @@ app.listen(PORT, async () => {
     console.log("Server is running on port " + PORT);
     const data = await prisma.user.findMany();
     console.log(data);
-    await prisma.follow.deleteMany();
 });

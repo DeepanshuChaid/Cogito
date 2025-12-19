@@ -6,7 +6,7 @@ import {
   updateUserDataController,
   logoutUserController,
   updateProfilePictureController,
-  getProfileUserDataController
+  getProfileUserDataController,
 } from "../controllers/user.controlleres.js";
 import { isAuthenticatedMiddleware } from "../middlewares/isAuthenticatedMiddleware.js";
 import passport from "../configs/passport.config.js";
@@ -16,26 +16,53 @@ import {
 } from "../utils/token.utils.js";
 import { setCookies } from "../utils/cookie.utils.js";
 import uploadFile from "../middlewares/multerMiddleware.js";
-import { redisClient } from "../server.js";
+import { rateLimit } from "../ratelimiter/bucketToken.ratelimiter.js";
 
 const userRoutes = Router();
 
-userRoutes.post("/login", loginUserController);
+userRoutes.post(
+  "/login",
+  rateLimit({ capacity: 3, refillPerSecond: 0.8 }),
+  loginUserController,
+);
 
-userRoutes.post("/register", registerUserController);
+userRoutes.post(
+  "/register",
+  rateLimit({ capacity: 3, refillPerSecond: 0.2 }),
+  registerUserController,
+);
 
-userRoutes.put("/update", isAuthenticatedMiddleware, updateUserDataController);
+userRoutes.put(
+  "/update",
+  rateLimit({ capacity: 3, refillPerSecond: 0.2 }),
+  isAuthenticatedMiddleware,
+  updateUserDataController,
+);
 
-userRoutes.post("/update/profile-picture", isAuthenticatedMiddleware, uploadFile,  updateProfilePictureController)
+userRoutes.post(
+  "/update/profile-picture",
+  rateLimit({ capacity: 3, refillPerSecond: 0.8 }),
+  isAuthenticatedMiddleware,
+  uploadFile,
+  updateProfilePictureController,
+);
 
-userRoutes.get("/current", isAuthenticatedMiddleware, getUserDataController);
+userRoutes.get(
+  "/current",
+  rateLimit({ capacity: 25, refillPerSecond: 0.2 }),
+  isAuthenticatedMiddleware,
+  getUserDataController,
+);
 
 // Logout route
-userRoutes.post("/logout", isAuthenticatedMiddleware,  logoutUserController);
+userRoutes.post("/logout", isAuthenticatedMiddleware, logoutUserController);
 
 // get other user data
-userRoutes.get("/profile/:name", isAuthenticatedMiddleware, getProfileUserDataController)
-
+userRoutes.get(
+  "/profile/:name",
+  isAuthenticatedMiddleware,
+  getProfileUserDataController,
+);
 
 // Login route - THIS IS WHERE YOU ADD SCOPE
 userRoutes.get(
@@ -58,6 +85,5 @@ userRoutes.get(
     res.redirect("/"); // Redirect after successful login
   },
 );
-
 
 export default userRoutes;

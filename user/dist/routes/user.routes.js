@@ -1,16 +1,17 @@
 import { Router } from "express";
-import { getUserDataController, loginUserController, registerUserController, updateUserDataController, logoutUserController, updateProfilePictureController, getProfileUserDataController } from "../controllers/user.controlleres.js";
+import { getUserDataController, loginUserController, registerUserController, updateUserDataController, logoutUserController, updateProfilePictureController, getProfileUserDataController, } from "../controllers/user.controlleres.js";
 import { isAuthenticatedMiddleware } from "../middlewares/isAuthenticatedMiddleware.js";
 import passport from "../configs/passport.config.js";
 import { generateAccessToken, generateRefreshToken, } from "../utils/token.utils.js";
 import { setCookies } from "../utils/cookie.utils.js";
 import uploadFile from "../middlewares/multerMiddleware.js";
+import { rateLimit } from "../ratelimiter/bucketToken.ratelimiter.js";
 const userRoutes = Router();
-userRoutes.post("/login", loginUserController);
-userRoutes.post("/register", registerUserController);
-userRoutes.put("/update", isAuthenticatedMiddleware, updateUserDataController);
-userRoutes.post("/update/profile-picture", isAuthenticatedMiddleware, uploadFile, updateProfilePictureController);
-userRoutes.get("/current", isAuthenticatedMiddleware, getUserDataController);
+userRoutes.post("/login", rateLimit({ capacity: 3, refillPerSecond: 0.8 }), loginUserController);
+userRoutes.post("/register", rateLimit({ capacity: 3, refillPerSecond: 0.2 }), registerUserController);
+userRoutes.put("/update", rateLimit({ capacity: 3, refillPerSecond: 0.2 }), isAuthenticatedMiddleware, updateUserDataController);
+userRoutes.post("/update/profile-picture", rateLimit({ capacity: 3, refillPerSecond: 0.8 }), isAuthenticatedMiddleware, uploadFile, updateProfilePictureController);
+userRoutes.get("/current", rateLimit({ capacity: 25, refillPerSecond: 0.2 }), isAuthenticatedMiddleware, getUserDataController);
 // Logout route
 userRoutes.post("/logout", isAuthenticatedMiddleware, logoutUserController);
 // get other user data
