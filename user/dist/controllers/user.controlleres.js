@@ -14,9 +14,6 @@ export const loginUserController = asyncHandler(async (req, res) => {
     const parsed = loginUserSchema.parse({ email, password });
     const user = await prisma.user.findUnique({
         where: { email },
-        include: {
-            accounts: true,
-        },
     });
     if (!user?.password)
         throw new Error("User has no password");
@@ -78,7 +75,7 @@ export const getUserDataController = asyncHandler(async (req, res) => {
             user: JSON.parse(cachedData),
         });
     }
-    const user = await prisma.user.findFirst({
+    const user = await prisma.user.findUnique({
         where: { id: req.user.id },
     });
     if (!user)
@@ -192,11 +189,7 @@ export const getProfileUserDataController = asyncHandler(async (req, res) => {
             },
         },
     });
-    if (isFollowing) {
-        user.isFollowing = true;
-    }
-    else
-        user.isFollowing = false;
+    user.isFollowing = isFollowing ? true : false;
     if (!user)
         throw new Error("User not found");
     await redisClient.set(cacheKey, JSON.stringify(user), { EX: 300 });

@@ -25,13 +25,26 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
             // Increment DB views async
             await prisma.blog.update({
                 where: { id: blogId },
-                data: { views: { increment: 1, engagementScore: { increment: 0.5 } } },
+                data: {
+                    views: { increment: 1 },
+                    engagementScore: { increment: 0.5 }
+                },
             });
             // Update cached object without refetch
             blog.views += 1;
             await redisClient.set(cacheKey, JSON.stringify(blog), { EX: 18000 });
         }
         const role = blog.authorId === userId ? "author" : "user";
+        const isReacted = await prisma.blogreaction.findUnique({
+            where: {
+                userId_blogId: {
+                    userId: userId,
+                    blogId,
+                }
+            },
+        });
+        if (isReacted)
+            blog.isReacted = isReacted;
         return res.status(200).json({
             cached: true,
             message: "Blog fetched successfully",

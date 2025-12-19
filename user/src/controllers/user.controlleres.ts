@@ -25,9 +25,6 @@ export const loginUserController = asyncHandler(
 
     const user = await prisma.user.findUnique({
       where: { email },
-      include: {
-        accounts: true,
-      },
     });
 
     if (!user?.password) throw new Error("User has no password");
@@ -113,7 +110,7 @@ export const getUserDataController = asyncHandler(
       });
     }
 
-    const user = await prisma.user.findFirst({
+    const user = await prisma.user.findUnique({
       where: { id: req.user.id },
     });
 
@@ -261,9 +258,7 @@ export const getProfileUserDataController = asyncHandler(async (req: Request, re
       },
     })
 
-  if (isFollowing) {
-    user.isFollowing = true  
-  } else user.isFollowing = false
+  user.isFollowing = isFollowing ? true : false
   
     if (!user) throw new Error("User not found");
 

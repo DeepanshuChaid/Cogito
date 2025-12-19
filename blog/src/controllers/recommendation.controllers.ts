@@ -166,10 +166,13 @@ export const searchBlogsController = asyncHandler(async (req, res) => {
   const blogs = await prisma.blog.findMany({
     where: { OR: ORconditions },
     include: {
-      author: true,
-      blogReaction: {
-        select: { type: true }
-      }, // NEED THIS TO COUNT LIKES/DISLIKES
+      author: {
+        select: {
+          id: true,
+          name: true,
+          profilePicture: true,
+        }  
+      },
       _count: {
         select: { comments: true, savedBlogs: true },
       },
