@@ -9,9 +9,8 @@ import "dotenv/config";
 import { isAuthenticatedMiddleware } from "./middlewares/isAuthenticatedMiddleware.js";
 import cookieParser from "cookie-parser";
 import { createClient } from "redis";
-import { blogLimiter } from "./ratelimiter/blogs.ratelimiter.js";
-import { generalLimiter } from "./ratelimiter/general.ratelimiter.js";
 import { rateLimit } from "./ratelimiter/bucket.ratelimiter.js";
+import cors from "cors"
 
 // Initialize Redis client
 export const redisClient = createClient({
@@ -37,6 +36,11 @@ cloudinary.config({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true,
+}))
 
 app.use(
   "/api/blog",

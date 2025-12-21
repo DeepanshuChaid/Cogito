@@ -10,6 +10,7 @@ import { isAuthenticatedMiddleware } from "./middlewares/isAuthenticatedMiddlewa
 import cookieParser from "cookie-parser";
 import { createClient } from "redis";
 import { rateLimit } from "./ratelimiter/bucket.ratelimiter.js";
+import cors from "cors";
 // Initialize Redis client
 export const redisClient = createClient({
     url: process.env.REDIS_URL_UPSTASH,
@@ -30,6 +31,10 @@ cloudinary.config({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+}));
 app.use("/api/blog", isAuthenticatedMiddleware, rateLimit({ capacity: 32, refillPerSecond: 0.8, }), blogRoutes);
 app.use("/api/comment", rateLimit({ capacity: 10, refillPerSecond: 0.5, }), isAuthenticatedMiddleware, commentRoutes);
 app.use("/api/user", rateLimit({ capacity: 10, refillPerSecond: 0.4, }), isAuthenticatedMiddleware, userRoutes);

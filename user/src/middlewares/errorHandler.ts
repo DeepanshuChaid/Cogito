@@ -1,21 +1,27 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
+import { AppError } from "./appError.js";
 
 export const errorHandler = (
-  err: unknown,
+  err: any,
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  console.error('💥 Unhandled Error:', err);
+  console.error("💥 ERROR:", err);
 
-  // Safely get message
-  let message = 'Internal Server Error';
-  if (err instanceof Error) {
+  // Default values
+  let statusCode = 500;
+  let message = "Internal Server Error";
+
+  if (err instanceof AppError) {
+    statusCode = err.statusCode;
     message = err.message;
-  } else if (typeof err === 'object' && err !== null && 'error' in err) {
-    // @ts-ignore
-    message = err.error;
+  } else if (err instanceof Error) {
+    message = err.message;
   }
 
-  res.status(500).json({ error: message });
+  res.status(statusCode).json({
+    success: false,
+    message,
+  });
 };

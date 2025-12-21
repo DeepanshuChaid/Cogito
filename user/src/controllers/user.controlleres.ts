@@ -15,6 +15,7 @@ import HTTPSTATUS from "../configs/http.config.js";
 import getBuffer from "../utils/dataUri.utils.js";
 import { v2 as cloudinary } from "cloudinary";
 import { redisClient } from "../server.js";
+import { AppError } from "../middlewares/appError.js"
 
 // LOGIN USER CONTROLLER
 export const loginUserController = asyncHandler(
@@ -27,7 +28,7 @@ export const loginUserController = asyncHandler(
       where: { email },
     });
 
-    if (!user?.password) throw new Error("User has no password");
+    if (!user?.password) throw new AppError("User has no password");
 
     if (!user) throw new Error("User not found");
 

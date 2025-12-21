@@ -1,8 +1,8 @@
 import axios from "axios";
 
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL, // backend url
-  withCredentials: true, // 🔥 THIS IS THE KEY
+const API = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  withCredentials: true, 
 });
 
-export default api;
+export default API;
