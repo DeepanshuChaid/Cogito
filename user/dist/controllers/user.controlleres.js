@@ -8,21 +8,27 @@ import HTTPSTATUS from "../configs/http.config.js";
 import getBuffer from "../utils/dataUri.utils.js";
 import { v2 as cloudinary } from "cloudinary";
 import { redisClient } from "../server.js";
+import { AppError } from "../middlewares/appError.js";
 // LOGIN USER CONTROLLER
 export const loginUserController = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
-    const parsed = loginUserSchema.parse({ email, password });
+    const parsed = loginUserSchema.safeParse({ email, password });
+    if (!parsed.success) {
+        throw new AppError(parsed.error.issues[0].message, 400);
+    }
     const user = await prisma.user.findUnique({
         where: { email },
     });
-    if (!user?.password)
-        throw new Error("User has no password");
-    if (!user)
-        throw new Error("User not found");
+    if (!user) {
+        throw new AppError("User not found", 404);
+    }
+    if (!user.password) {
+        throw new AppError("User has no password", 400);
+    }
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid)
-        throw new Error("Invalid password");
-    // REDIS :- CACHE USER DATA
+    if (!isPasswordValid) {
+        throw new AppError("Invalid password", 401);
+    }
     const cacheKey = `user_data:${user.id}`;
     await redisClient.set(cacheKey, JSON.stringify(user), { EX: 3600 });
     const accessToken = generateAccessToken(user.id);
@@ -35,52 +41,74 @@ export const loginUserController = asyncHandler(async (req, res) => {
 });
 // REGISTER USER CONTROLLER
 export const registerUserController = asyncHandler(async (req, res) => {
-    const { name, email, password } = req.body;
-    registerUserSchema.parse({ name, email, password });
+    const parsed = registerUserSchema.safeParse(req.body);
+    if (!parsed.success) {
+        throw new AppError(parsed.error.issues[0].message, 400);
+    }
+    const { name, email, password } = parsed.data;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await prisma.$transaction(async (tx) => {
-        const createdUser = await tx.user.create({
-            data: { name, email, password: hashedPassword },
-        });
-        await tx.account.create({
+    let createdUser;
+    try {
+        createdUser = await prisma.user.create({
             data: {
-                provider: "EMAIL",
-                userId: createdUser.id,
+                name,
+                email,
+                password: hashedPassword,
+                accounts: {
+                    create: {
+                        provider: "EMAIL",
+                    },
+                },
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                createdAt: true,
             },
         });
-        return createdUser;
-    });
-    // REDIS :- CACHE USER DATA
-    const cacheKey = `user_data:${user.id}`;
-    await redisClient.set(cacheKey, JSON.stringify(user), { EX: 3600 });
-    const accessToken = generateAccessToken(user.id);
-    const refreshToken = generateRefreshToken(user.id);
+    }
+    catch (err) {
+        // DB-level unique constraint handling (NO RACE CONDITION)
+        if (err.code === "P2002") {
+            const field = err.meta?.target?.[0];
+            throw new AppError(field === "email"
+                ? "User with this email already exists"
+                : "User with this name already exists", 400);
+        }
+        throw err;
+    }
+    // Cache only SAFE data
+    const cacheKey = `user_data:${createdUser.id}`;
+    await redisClient.set(cacheKey, JSON.stringify(createdUser), { EX: 3600 });
+    const accessToken = generateAccessToken(createdUser.id);
+    const refreshToken = generateRefreshToken(createdUser.id);
     setCookies(res, accessToken, refreshToken);
     res.status(HTTPSTATUS.CREATED).json({
-        message: "Account Successfully Registered.",
-        user,
+        message: "Account successfully registered",
+        user: createdUser,
     });
 });
 // GET USER DATA CONTROLLER
 export const getUserDataController = asyncHandler(async (req, res) => {
-    if (!req.user?.id)
-        throw new Error("No user in request.");
-    // REDIS :- CACHE USER DATA
+    if (!req.user?.id) {
+        throw new AppError("Unauthorized", 401);
+    }
     const cacheKey = `user_data:${req.user.id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-        console.log("USER DATA: Serving from cache");
         return res.status(200).json({
             message: "Successfully User Data Fetched",
+            CACHED: true,
             user: JSON.parse(cachedData),
         });
     }
     const user = await prisma.user.findUnique({
         where: { id: req.user.id },
     });
-    if (!user)
-        throw new Error("User not found");
-    // REDIS :- CACHE USER DATA
+    if (!user) {
+        throw new AppError("User not found", 404);
+    }
     await redisClient.set(cacheKey, JSON.stringify(user), { EX: 3600 });
     res.status(HTTPSTATUS.OK).json({
         message: "Successfully User Data Fetched",
@@ -89,36 +117,23 @@ export const getUserDataController = asyncHandler(async (req, res) => {
 });
 // UPDATE USER DATA CONTROLLER
 export const updateUserDataController = asyncHandler(async (req, res) => {
+    if (!req.user?.id) {
+        throw new AppError("Unauthorized", 401);
+    }
     const { name, instagram, facebook, bio } = req.body;
-    const userId = req.user?.id;
     const user = await prisma.user.update({
-        where: { id: userId },
+        where: { id: req.user.id },
         data: { name, instagram, facebook, bio },
     });
-    if (!user)
-        throw new Error("User not found");
-    const cacheKey = `user_data:${userId}`;
+    const cacheKey = `user_data:${req.user.id}`;
     await redisClient.del(cacheKey);
-    // REDIS :- CACHE USER DATA
     await redisClient.set(cacheKey, JSON.stringify(user), { EX: 3600 });
     res.status(HTTPSTATUS.OK).json({
         message: "Successfully User Data Updated",
         user,
     });
 });
-// LOGOUT USER CONTROLLER
-export const logoutUserController = asyncHandler(async (req, res) => {
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
-    if (req.session) {
-        req.logout((err) => {
-            if (err)
-                throw new Error("Error logging out");
-        });
-    }
-    res.status(200).json({ message: "Logged out successfully" });
-});
-// UPDATE PROFILE PICTURE CONTROLLER
+// UPDATE USER PROFILE PICTURE CONTROLLER
 export const updateProfilePictureController = asyncHandler(async (req, res) => {
     const userId = req.user?.id;
     const file = req.file;
@@ -148,14 +163,29 @@ export const updateProfilePictureController = asyncHandler(async (req, res) => {
         user,
     });
 });
-// GET PROFILE USER DATA CONTROLLER
+//  LOGOUT CONTROLLER
+export const logoutUserController = asyncHandler(async (req, res) => {
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+    if (req.session) {
+        req.logout((err) => {
+            if (err) {
+                throw new AppError("Error logging out", 500);
+            }
+        });
+    }
+    res.status(200).json({ message: "Logged out successfully" });
+});
+// GET PROFILE USER DATA
 export const getProfileUserDataController = asyncHandler(async (req, res) => {
     const name = req.params.name;
     const userId = req.user?.id;
+    if (!userId) {
+        throw new AppError("Unauthorized", 401);
+    }
     const cacheKey = `other_user_data:${name}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-        console.log("OTHER USER DATA: Serving from cache");
         return res.status(200).json({
             message: "Successfully User Data Fetched",
             CACHED: true,
@@ -174,27 +204,29 @@ export const getProfileUserDataController = asyncHandler(async (req, res) => {
             _count: {
                 select: {
                     followers: true,
-                    following: true
+                    following: true,
                 },
-            }
+            },
         },
     });
-    if (!user || !userId)
-        throw new Error("User not found");
+    if (!user) {
+        throw new AppError("User not found", 404);
+    }
     const isFollowing = await prisma.follow.findUnique({
         where: {
             followerId_followingId: {
                 followerId: userId,
-                followingId: user?.id,
+                followingId: user.id,
             },
         },
     });
-    user.isFollowing = isFollowing ? true : false;
-    if (!user)
-        throw new Error("User not found");
-    await redisClient.set(cacheKey, JSON.stringify(user), { EX: 300 });
-    return res.status(200).json({
+    const responseUser = {
+        ...user,
+        isFollowing: !!isFollowing,
+    };
+    await redisClient.set(cacheKey, JSON.stringify(responseUser), { EX: 300 });
+    res.status(200).json({
         message: "Successfully User Data Fetched",
-        user,
+        user: responseUser,
     });
 });

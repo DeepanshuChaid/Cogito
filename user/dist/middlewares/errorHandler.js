@@ -1,10 +1,18 @@
+import { AppError } from "./appError.js";
 export const errorHandler = (err, req, res, next) => {
-    console.error("💥 Unhandled Error:", err);
-    const status = typeof err.status === "number" ? err.status : 500;
-    const message = typeof err.message === "string"
-        ? err.message
-        : "Internal Server Error";
-    res.status(status).json({
+    console.error("💥 ERROR:", err);
+    // Default values
+    let statusCode = 500;
+    let message = "Internal Server Error";
+    if (err instanceof AppError) {
+        statusCode = err.statusCode;
+        message = err.message;
+    }
+    else if (err instanceof Error) {
+        message = err.message;
+    }
+    res.status(statusCode).json({
+        success: false,
         message,
     });
 };
