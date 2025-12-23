@@ -1,4 +1,4 @@
-🧠 Cogito
+## 🧠 Cogito
 
 A modern, scalable blogging platform focused on **thoughtful content, performance, and clean system design**.
 

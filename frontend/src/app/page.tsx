@@ -1,24 +1,37 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import API from "@/utils/API";
+import API from "@/lib/API";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import Link from "next/link";          
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const logout = async () => {
+    try {
+      await API.post("/user/logout");
+      window.location.reload();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  }
+
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await API.get("/api/user/current");
+        const res = await API.get("/user/current");
         setUser(res.data);
       } catch (err: any) {
         // Axios error handling
-        setError(
-          JSON.stringify(err)
-        );
+          setError(
+            err?.response?.data?.message ||
+            "Something went wrong"
+          )
       } finally {
         setLoading(false);
       }
@@ -27,24 +40,31 @@ export default function Home() {
     fetchData();
   }, []);
 
-  if (loading) {
-    return <p>Loading...</p>;
-  }
-
   if (error) {
-    return <p className="text-red-500">Error: {error}</p>;
+    return (
+     <>
+      <p className="cdsc">Error: {error}</p>;
+
+    <Button onClick={() => toast.success("Makima ki chudai")}>Create Event</Button>
+
+       <Link href="/profile/Ergo25">Profile</Link>
+     </> 
+    )
   }
 
   if (!user) {
-    return <p>No user data</p>;
+    return <p>{error}</p>;
   }
 
   return (
     <>
-      <Button>sigmaboy</Button>
-      <p className="text-2xl font-bold">
-        Hello {user.name}
-      </p>
+      <p>{JSON.stringify(user)}</p>
+
+      <Button onClick={logout}>Logout</Button>
+
+      <Button onClick={() => toast.success("Makima ki chudai")}>Create Event</Button>
+
+      <Link href="/profile/Ergo25">Profile</Link>
     </>
   );
 }
