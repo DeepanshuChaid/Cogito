@@ -51,9 +51,7 @@ model User {
 enum NotificationType {
   FOLLOW
   BLOG_LIKE
-  BLOG_REACTION
   COMMENT
-  REPLY
 }
 
 model Notification {
@@ -71,7 +69,9 @@ model Notification {
 
   // Optional: Link to the specific content
   blogId      String?          @db.Uuid
+  
   commentId   String?          @db.Uuid
+  commentText String?          @db.Uuid
 
   createdAt   DateTime         @default(now())
 

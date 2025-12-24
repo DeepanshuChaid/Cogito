@@ -7,67 +7,57 @@ export const getNotifications = asyncHandler(async (req, res) => {
     if (!userId)
         throw new AppError("Unauthorized", 401);
     const limit = req.query.limit ? Number(req.query.limit) : 10;
-    const page = req.query.page ? Number(req.query.page) : 1;
-    const skip = (page - 1) * limit;
-    const cacheKey = `notifications:${userId}:page:${page}:limit:${limit}`;
+    const cursor = req.query.cursor;
+    const cacheKey = `notifications:${userId}:cursor:${cursor ?? "start"}:limit:${limit}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
         return res.status(200).json({
             message: "Notifications fetched successfully",
             notifications: JSON.parse(cachedData),
-            pagination: { page, limit },
+            nextCursor: JSON.parse(cachedData).length
+                ? JSON.parse(cachedData)[JSON.parse(cachedData).length - 1].id
+                : null,
+            limit,
         });
     }
-    const raw = await prisma.notification.findMany({
+    const rawNotifications = await prisma.notification.findMany({
         where: { receiverId: userId },
         orderBy: { createdAt: "desc" },
-        include: {
-            issuer: {
-                select: {
-                    name: true,
-                    profilePicture: true,
-                    id: true
-                }
-            }
-        },
-        skip,
         take: limit,
+        cursor: cursor ? { id: cursor } : undefined,
+        skip: cursor ? 1 : 0, // skip the cursor itself
+        include: {
+            issuer: { select: { id: true, name: true, profilePicture: true } },
+            comment: { select: { comment: true } }, // include comment text
+        },
     });
+    // Aggregation logic
     const map = new Map();
-    for (const n of raw) {
+    for (const n of rawNotifications) {
         let key = null;
-        // 🔑 aggregation keys
-        if (n.type === "BLOG_LIKE" && n.blogId) {
+        if (n.type === "BLOG_LIKE" && n.blogId)
             key = `LIKE_${n.blogId}`;
-        }
-        if (n.type === "COMMENT" && n.commentId) {
+        if (n.type === "COMMENT" && n.commentId)
             key = `COMMENT_${n.commentId}`;
-        }
-        if (n.type === "REPLY" && n.commentId) {
-            key = `REPLY_${n.commentId}`;
-        }
-        // ❌ non-aggregatable
+        if (n.type === "FOLLOW")
+            key = `FOLLOW_${n.issuerId}`;
         if (!key) {
-            map.set(n.id, {
-                ...n,
-                othersCount: 0,
-            });
+            map.set(n.id, { ...n, othersCount: 0 });
             continue;
         }
-        // 🆕 first occurrence
         if (!map.has(key)) {
             map.set(key, {
                 id: key,
                 type: n.type,
                 blogId: n.blogId ?? null,
                 commentId: n.commentId ?? null,
-                primaryUserId: n.issuerId,
+                comment: n.comment?.comment ?? null,
+                primaryUser: n.issuer,
                 othersCount: 0,
                 isRead: n.isRead,
                 createdAt: n.createdAt,
             });
         }
-        // ➕ aggregate
         else {
             const item = map.get(key);
             item.othersCount += 1;
@@ -75,10 +65,14 @@ export const getNotifications = asyncHandler(async (req, res) => {
         }
     }
     const aggregatedNotifications = Array.from(map.values()).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-    await redisClient.set(cacheKey, JSON.stringify(aggregatedNotifications), { EX: 300 });
+    await redisClient.set(cacheKey, JSON.stringify(aggregatedNotifications), { EX: 300 } // cache 5 min
+    );
     return res.status(200).json({
         message: "Notifications fetched successfully",
         notifications: aggregatedNotifications,
-        pagination: { page, limit },
+        nextCursor: aggregatedNotifications.length
+            ? aggregatedNotifications[aggregatedNotifications.length - 1].id
+            : null,
+        limit,
     });
 });
