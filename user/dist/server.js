@@ -11,6 +11,7 @@ import { isAuthenticatedMiddleware } from "./middlewares/isAuthenticatedMiddlewa
 import { v2 as cloudinary } from "cloudinary";
 import { createClient } from "redis";
 import followRoutes from "./routes/follow.routes.js";
+import notificationRoutes from "./routes/notifications.routes.js";
 export const redisClient = createClient({
     url: process.env.REDIS_URL_UPSTASH,
 });
@@ -50,6 +51,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use("/api/user", userRoutes);
 app.use("/api/user", isAuthenticatedMiddleware, followRoutes);
+app.use("/api/notification", isAuthenticatedMiddleware, notificationRoutes);
 app.use(errorHandler);
 app.get("/", (req, res) => {
     res.send("Hello World");
