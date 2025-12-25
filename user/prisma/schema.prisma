@@ -52,6 +52,7 @@ enum NotificationType {
   FOLLOW
   BLOG_LIKE
   COMMENT
+  REPLY
 }
 
 model Notification {
@@ -76,6 +77,7 @@ model Notification {
   createdAt   DateTime         @default(now())
 
   @@index([receiverId])
+  @@index([type])
   @@index([isRead])
 }
 
