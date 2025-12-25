@@ -53,6 +53,13 @@ export const followUserController = asyncHandler(async (req, res) => {
             followingId: targetUser.id,
         },
     });
+    await prisma.notification.create({
+        data: {
+            type: "FOLLOW",
+            issuerId: followerId,
+            receiverId: targetUser.id,
+        },
+    });
     await redisClient.del(cacheKey);
     return res.status(201).json({
         success: true,
