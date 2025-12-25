@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getNotifications, markNotificationsAsRead, markAllAsRead, getUnreadCount } from "../controllers/notification.controller.js";
+import { getNotificationsController, markNotificationsAsReadController, markAllAsReadController, deleteNotificationController } from "../controllers/notification.controller.js";
 import { rateLimit } from "../ratelimiter/bucketToken.ratelimiter.js"
 
 const notificationRoutes = Router();
@@ -7,21 +7,24 @@ const notificationRoutes = Router();
 notificationRoutes.get(
   "/get",
   rateLimit({ capacity: 5, refillPerSecond: 0.5 }),
-  getNotifications
+  getNotificationsController
 );
 
 notificationRoutes.put(
   "/mark-as-read",
   rateLimit({ capacity: 1, refillPerSecond: 0.1 }),
-  markNotificationsAsRead
+  markNotificationsAsReadController
 )
 
 notificationRoutes.put(
   "/mark-as-read/all",
   rateLimit({ capacity: 1, refillPerSecond: 0.1 }),
-  markAllAsRead
+  markAllAsReadController
 )
 
-notificationRoutes.delete
+notificationRoutes.delete(
+  "/delete/:notificationId",                                       rateLimit({ capacity: 5, refillPerSecond: 0.1 }),
+  deleteNotificationController
+)
 
 export default notificationRoutes;

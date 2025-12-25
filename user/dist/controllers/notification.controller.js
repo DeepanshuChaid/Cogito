@@ -3,7 +3,7 @@ import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { AppError } from "../middlewares/appError.js";
 import { redisClient } from "../server.js";
 // GET NOTIFICATIONS
-export const getNotifications = asyncHandler(async (req, res) => {
+export const getNotificationsController = asyncHandler(async (req, res) => {
     const userId = req.user?.id;
     if (!userId)
         throw new AppError("Unauthorized", 401);
@@ -73,7 +73,7 @@ export const getNotifications = asyncHandler(async (req, res) => {
     });
 });
 // MARK NOTIFICATIONS AS READ
-export const markNotificationsAsRead = asyncHandler(async (req, res) => {
+export const markNotificationsAsReadController = asyncHandler(async (req, res) => {
     const userId = req.user?.id;
     if (!userId)
         throw new AppError("Unauthorized", 401);
@@ -99,7 +99,7 @@ export const markNotificationsAsRead = asyncHandler(async (req, res) => {
     });
 });
 // MARK ALL AS READ
-export const markAllAsRead = asyncHandler(async (req, res) => {
+export const markAllAsReadController = asyncHandler(async (req, res) => {
     const userId = req.user?.id;
     if (!userId)
         throw new AppError("Unauthorized", 401);
@@ -121,7 +121,7 @@ export const markAllAsRead = asyncHandler(async (req, res) => {
     });
 });
 // GET UNREAD COUNT
-export const getUnreadCount = asyncHandler(async (req, res) => {
+export const getUnreadCountController = asyncHandler(async (req, res) => {
     const userId = req.user?.id;
     if (!userId)
         throw new AppError("Unauthorized", 401);
@@ -146,7 +146,7 @@ export const getUnreadCount = asyncHandler(async (req, res) => {
     });
 });
 // DELETE NOTIFICATION
-export const deleteNotification = asyncHandler(async (req, res) => {
+export const deleteNotificationController = asyncHandler(async (req, res) => {
     const userId = req.user?.id;
     if (!userId)
         throw new AppError("Unauthorized", 401);
