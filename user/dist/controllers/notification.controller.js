@@ -2,11 +2,13 @@ import prisma from "../prisma.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { AppError } from "../middlewares/appError.js";
 import { redisClient } from "../server.js";
+
+// GET NOTIFICATIONS
 export const getNotifications = asyncHandler(async (req, res) => {
     const userId = req.user?.id;
     if (!userId)
         throw new AppError("Unauthorized", 401);
-    const limit = req.query.limit ? Number(req.query.limit) : 10;
+    const limit = req.query.limit ? Number(req.query.limit) : 20;
     const cursor = req.query.cursor;
     const cacheKey = `notifications:${userId}:cursor:${cursor ?? "start"}:limit:${limit}`;
     const cachedData = await redisClient.get(cacheKey);
@@ -28,7 +30,6 @@ export const getNotifications = asyncHandler(async (req, res) => {
         skip: cursor ? 1 : 0, // skip the cursor itself
         include: {
             issuer: { select: { id: true, name: true, profilePicture: true } },
-            comment: { select: { comment: true } }, // include comment text
         },
     });
     // Aggregation logic
@@ -51,8 +52,8 @@ export const getNotifications = asyncHandler(async (req, res) => {
                 type: n.type,
                 blogId: n.blogId ?? null,
                 commentId: n.commentId ?? null,
-                comment: n.comment?.comment ?? null,
-                primaryUser: n.issuer,
+                comment: n.commentText ?? null,
+                issuer: n.issuer,
                 othersCount: 0,
                 isRead: n.isRead,
                 createdAt: n.createdAt,

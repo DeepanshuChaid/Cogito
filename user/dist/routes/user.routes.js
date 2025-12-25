@@ -8,10 +8,10 @@ import uploadFile from "../middlewares/multerMiddleware.js";
 import { rateLimit } from "../ratelimiter/bucketToken.ratelimiter.js";
 const userRoutes = Router();
 userRoutes.post("/login", rateLimit({ capacity: 3, refillPerSecond: 0.8 }), loginUserController);
-userRoutes.post("/register", rateLimit({ capacity: 3, refillPerSecond: 0.2 }), registerUserController);
-userRoutes.put("/update", rateLimit({ capacity: 3, refillPerSecond: 0.2 }), isAuthenticatedMiddleware, updateUserDataController);
-userRoutes.post("/update/profile-picture", rateLimit({ capacity: 3, refillPerSecond: 0.8 }), isAuthenticatedMiddleware, uploadFile, updateProfilePictureController);
-userRoutes.get("/current", rateLimit({ capacity: 25, refillPerSecond: 0.2 }), isAuthenticatedMiddleware, getUserDataController);
+userRoutes.post("/register", rateLimit({ capacity: 3, refillPerSecond: 1 }), registerUserController);
+userRoutes.put("/update", rateLimit({ capacity: 3, refillPerSecond: 5 }), isAuthenticatedMiddleware, updateUserDataController);
+userRoutes.post("/update/profile-picture", rateLimit({ capacity: 3, refillPerSecond: 5 }), isAuthenticatedMiddleware, uploadFile, updateProfilePictureController);
+userRoutes.get("/current", rateLimit({ capacity: 25, refillPerSecond: 1 }), isAuthenticatedMiddleware, getUserDataController);
 // Logout route
 userRoutes.post("/logout", isAuthenticatedMiddleware, logoutUserController);
 // get other user data

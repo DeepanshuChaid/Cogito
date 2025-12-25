@@ -9,6 +9,7 @@ import getBuffer from "../utils/dataUri.utils.js";
 import { v2 as cloudinary } from "cloudinary";
 import { redisClient } from "../server.js";
 import { AppError } from "../middlewares/appError.js";
+
 // LOGIN USER CONTROLLER
 export const loginUserController = asyncHandler(async (req, res) => {
     const { email, password } = req.body;

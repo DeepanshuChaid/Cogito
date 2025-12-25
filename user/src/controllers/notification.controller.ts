@@ -31,7 +31,6 @@ export const getNotifications = asyncHandler(async (req, res) => {
     skip: cursor ? 1 : 0, // skip the cursor itself
     include: {
       issuer: { select: { id: true, name: true, profilePicture: true } },
-      comment: { select: { comment: true } }, // include comment text
     },
   });
 
@@ -55,8 +54,8 @@ export const getNotifications = asyncHandler(async (req, res) => {
         type: n.type,
         blogId: n.blogId ?? null,
         commentId: n.commentId ?? null,
-        comment: n.comment?.comment ?? null,
-        primaryUser: n.issuer,
+        comment: n.commentText ?? null,
+        issuer: n.issuer,
         othersCount: 0,
         isRead: n.isRead,
         createdAt: n.createdAt,

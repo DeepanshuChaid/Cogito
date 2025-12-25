@@ -28,20 +28,20 @@ userRoutes.post(
 
 userRoutes.post(
   "/register",
-  rateLimit({ capacity: 3, refillPerSecond: 0.2 }),
+  rateLimit({ capacity: 3, refillPerSecond: 1 }),
   registerUserController,
 );
 
 userRoutes.put(
   "/update",
-  rateLimit({ capacity: 3, refillPerSecond: 0.2 }),
+  rateLimit({ capacity: 3, refillPerSecond: 5 }),
   isAuthenticatedMiddleware,
   updateUserDataController,
 );
 
 userRoutes.post(
   "/update/profile-picture",
-  rateLimit({ capacity: 3, refillPerSecond: 0.8 }),
+  rateLimit({ capacity: 3, refillPerSecond: 5 }),
   isAuthenticatedMiddleware,
   uploadFile,
   updateProfilePictureController,
@@ -49,7 +49,7 @@ userRoutes.post(
 
 userRoutes.get(
   "/current",
-  rateLimit({ capacity: 25, refillPerSecond: 0.2 }),
+  rateLimit({ capacity: 25, refillPerSecond: 1 }),
   isAuthenticatedMiddleware,
   getUserDataController,
 );
