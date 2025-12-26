@@ -73,7 +73,7 @@ export const getNotificationsController = asyncHandler(async (req, res) => {
   };
 
   // Cache for 2 minutes (120 seconds)
-  await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: 120 });
+  await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: 60 });
 
   return res.status(200).json({
     success: true,
