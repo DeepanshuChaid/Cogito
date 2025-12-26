@@ -54,12 +54,15 @@ export const createCommentController = asyncHandler(async (req, res) => {
           blogId: blogId,
         }
       })
-    
 
     return response;
   });
 
   if (!newComment) throw new Error("Error creating comment");
+
+  // Invalidate cache for the target user's profile Data
+  await redisClient.del(`user_data:${blog.authorId}`)
+
 
   await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
 

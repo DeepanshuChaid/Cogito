@@ -1,6 +1,7 @@
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
 import { invalidateCache, getCachedData, setCachedData, deleteCommentCaches, } from "../utils/redis.utils.js";
+import { redisClient } from "../server.js";
 // *************************** //
 // CREATE COMMENTS CONTROLLER
 // *************************** //
@@ -46,6 +47,8 @@ export const createCommentController = asyncHandler(async (req, res) => {
     });
     if (!newComment)
         throw new Error("Error creating comment");
+    // Invalidate cache for the target user's profile Data
+    await redisClient.del(`user_data:${blog.authorId}`);
     await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
     await deleteCommentCaches(blogId);
     return res.status(201).json({

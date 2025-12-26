@@ -157,7 +157,7 @@ export const getUserDataController = asyncHandler(
       }),
       prisma.notification.count({
         where: {
-          userId: req.user.id,
+          receiverId: req.user.id,
           isRead: false,
         }
       })

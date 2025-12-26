@@ -39,6 +39,10 @@ export const likeBlogController = asyncHandler(async (req, res) => {
       }
     })
 
+    // Invalidate cache for the target user's profile Data
+    await redisClient.del(`user_data:${blog.authorId}`)
+
+
     likesDelta = 1;
     engagementDelta = 4;
   }
@@ -68,6 +72,10 @@ export const likeBlogController = asyncHandler(async (req, res) => {
         blogId: blogId
       }
     })
+
+
+    // Invalidate cache for the target user's profile Data
+    await redisClient.del(`user_data:${blog.authorId}`)
 
     likesDelta = 1;
     dislikesDelta = -1;
