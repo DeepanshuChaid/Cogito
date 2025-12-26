@@ -30,7 +30,14 @@ export const createCommentController = asyncHandler(async (req, res) => {
             where: { id: blogId },
             data: {
                 engagementScore: { increment: 6 }, // Comments are valuable
-            },
+            }
+        });
+        await tx.notification.create({
+            data: {
+                type: parentId ? "REPLY" : "COMMENT",
+                issuerId: userId,
+                receiverId: blog.authorId
+            }
         });
         return response;
     });

@@ -38,11 +38,49 @@ model User {
 
   comments Comments[]
 
+  notificationsReceived Notification[] @relation("NotificationReceiver")
+  notificationsIssued   Notification[] @relation("NotificationIssuer")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([name])
 }
+
+
+enum NotificationType {
+  FOLLOW
+  BLOG_LIKE
+  COMMENT
+  REPLY
+}
+
+model Notification {
+  id          String           @id @default(uuid()) @db.Uuid
+  type        NotificationType
+  isRead      Boolean          @default(false)
+
+  // The user who receives the notification
+  receiverId  String           @db.Uuid
+  receiver    User             @relation("NotificationReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  // The user who performed the action (e.g., the person who liked the blog)
+  issuerId    String           @db.Uuid
+  issuer      User             @relation("NotificationIssuer", fields: [issuerId], references: [id], onDelete: Cascade)
+
+  // Optional: Link to the specific content
+  blogId      String?          @db.Uuid
+  
+  commentId   String?          @db.Uuid
+  commentText String?          @db.Uuid
+
+  createdAt   DateTime         @default(now())
+
+  @@index([receiverId])
+  @@index([type])
+  @@index([isRead])
+}
+
 
 model Follow {
   id           String    @id @default(uuid()) @db.Uuid
@@ -299,7 +337,6 @@ enum BlogCategory {
   CONSENT_AND_SAFETY
   ADULT_STORIES
 }
-
 
 
 

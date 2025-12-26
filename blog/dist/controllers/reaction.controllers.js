@@ -7,6 +7,12 @@ import { invalidateCache } from "../utils/redis.utils.js";
 export const likeBlogController = asyncHandler(async (req, res) => {
     const blogId = req.params.id;
     const userId = req.user.id;
+    const blog = await prisma.blog.findUnique({
+        where: { id: blogId },
+        select: { authorId: true }
+    });
+    if (!blog)
+        throw new Error("blog not found");
     const existingReaction = await prisma.blogreaction.findUnique({
         where: { userId_blogId: { userId, blogId } },
     });
@@ -17,6 +23,13 @@ export const likeBlogController = asyncHandler(async (req, res) => {
         // ➕ New LIKE
         await prisma.blogreaction.create({
             data: { userId, blogId, type: "LIKE" },
+        });
+        await prisma.notification.create({
+            data: {
+                type: "BLOG_LIKE",
+                issuerId: userId,
+                receiverId: blog.authorId
+            }
         });
         likesDelta = 1;
         engagementDelta = 4;
@@ -34,6 +47,13 @@ export const likeBlogController = asyncHandler(async (req, res) => {
         await prisma.blogreaction.update({
             where: { id: existingReaction.id },
             data: { type: "LIKE" },
+        });
+        await prisma.notification.create({
+            data: {
+                type: "BLOG_LIKE",
+                issuerId: userId,
+                receiverId: blog.authorId
+            }
         });
         likesDelta = 1;
         dislikesDelta = -1;
