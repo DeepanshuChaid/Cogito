@@ -4,12 +4,10 @@ import { Button } from "@/components/ui/button";
 import API from "@/lib/API";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import Link from "next/link";          
+import Link from "next/link"; 
+import { useQuery } from "@tanstack/react-query";
 
 export default function Home() {
-  const [user, setUser] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const logout = async () => {
     try {
@@ -21,24 +19,12 @@ export default function Home() {
   }
 
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await API.get("/user/current");
-        setUser(res.data);
-      } catch (err: any) {
-        // Axios error handling
-          setError(
-            err?.response?.data?.message ||
-            "Something went wrong"
-          )
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchData();
-  }, []);
+  const {data, isPending, error} = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: getCurrentUser,
+    staleTime: 300 * 1000,
+  })
 
   if (error) {
     return (
