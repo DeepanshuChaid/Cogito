@@ -31,7 +31,7 @@ export const createCommentController = asyncHandler(async (req, res) => {
             where: { id: blogId },
             data: {
                 engagementScore: { increment: 6 }, // Comments are valuable
-            }
+            },
         });
         await tx.notification.create({
             data: {
@@ -41,7 +41,7 @@ export const createCommentController = asyncHandler(async (req, res) => {
                 commentId: response.id,
                 commentText: comment,
                 blogId: blogId,
-            }
+            },
         });
         return response;
     });
@@ -115,10 +115,7 @@ export const updateCommentController = asyncHandler(async (req, res) => {
         where: { id: commentId },
         data: { comment, isEdited: true },
     });
-    await invalidateCache([
-        `blog:${blogId}`,
-        `user_blogs:${userId}`,
-    ]);
+    await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
     await deleteCommentCaches(blogId);
     return res.status(200).json({
         message: "Comment updated successfully",
@@ -157,7 +154,7 @@ export const getCommentsController = asyncHandler(async (req, res) => {
     if (!comments)
         throw new Error("No comments found");
     comments.forEach((e) => {
-        e.userId === userId ? e.role = "author" : e.role = "user";
+        e.userId === userId ? (e.role = "author") : (e.role = "user");
     });
     await setCachedData(cacheKey, comments);
     return res.status(200).json({

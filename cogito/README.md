@@ -30,6 +30,18 @@ Cogito is built to handle real-world usage: authentication, blogs, reactions, co
 - Followers & following system
 - Scales to hundreds of thousands of users
 
+### 🔔 Notifications
+- Unified notification feed (Medium/Twitter-style)
+- Notifications for:
+  - Blog likes
+  - New followers
+  - Blog comments
+  - Comment replies
+- Filtered views: **All / Like / Comment / Reply**
+- Read & unread state
+- Deep linking to related blog, comment, or profile
+- Designed to scale with high user activity
+
 ### 🔐 Authentication
 - Email & Google OAuth
 - JWT-based authentication
@@ -77,6 +89,7 @@ Cogito is built to handle real-world usage: authentication, blogs, reactions, co
 - `Comments`
 - `Blogreaction`
 - `Savedblogs`
+- `Notifications`
 
 **Key decisions**
 - Join tables for follows, reactions, saves
@@ -110,23 +123,6 @@ Limits:
 
 ---
 
-## 📦 API Highlights
-
-### Blogs
-- `POST /api/blog` – create blog
-- `GET /api/blog` – fetch blogs
-- `POST /api/blog/:id/save` – save blog
-
-### Users
-- `POST /profile/:name/follow` – follow/unfollow
-- `GET /profile/:name` – public profile
-
-### Comments
-- `POST /api/comment`
-- Nested replies supported
-
----
-
 ## ⚙️ Environment Variables
 
 ```env
@@ -137,11 +133,12 @@ JWT_SECRET=your_secret
 CLOUD_NAME=cloudinary_name
 CLOUD_API_KEY=cloudinary_key
 CLOUD_API_SECRET=cloudinary_secret
+```
 
 
 ---
 
-🚀 Scalability
+## 🚀 Scalability
 
 Cogito is designed to handle:
 
@@ -164,7 +161,7 @@ DB indexes instead of in-memory hacks
 
 ---
 
-🧪 Local Development
+## 🧪 Local Development
 
 npm install
 npx prisma generate
@@ -174,7 +171,7 @@ npm run dev
 
 ---
 
-📌 Philosophy
+## 📌 Philosophy
 
 Correct data modeling
 
@@ -188,6 +185,6 @@ Systems that don’t collapse later
 
 ---
 
-👤 Author
+## 👤 Author
 
 Built by Deepanshu (Cogito) — full-stack developer & UX designer.

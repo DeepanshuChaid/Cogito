@@ -38,7 +38,6 @@ export const likeBlogController = asyncHandler(async (req, res) => {
         blogId: blogId
       }
     })
-
     // Invalidate cache for the target user's profile Data
     await redisClient.del(`user_data:${blog.authorId}`)
 
@@ -72,8 +71,6 @@ export const likeBlogController = asyncHandler(async (req, res) => {
         blogId: blogId
       }
     })
-
-
     // Invalidate cache for the target user's profile Data
     await redisClient.del(`user_data:${blog.authorId}`)
 
@@ -156,3 +153,6 @@ export const dislikeBlogController = asyncHandler(async (req, res) => {
 
   res.status(200).json({ message: "Dislike processed" });
 });
+
+
+
