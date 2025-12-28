@@ -18,9 +18,8 @@ export const createCommentController = asyncHandler(async (req, res) => {
   const { comment, parentId } = req.body;
 
   const blog = await prisma.blog.findUnique({
-    where: {
-      id: blogId,
-    },
+    where: {  id: blogId, },
+    select: {authorId: true,},
   });
 
   if (!blog) throw new Error("Blog not found");
@@ -41,17 +40,22 @@ export const createCommentController = asyncHandler(async (req, res) => {
       where: { id: blogId },
       data: {
         engagementScore: { increment: 6 }, // Comments are valuable
-      }
-    })
+      },
+    });
 
-      await tx.notification.create({
+    // Create notification if not author
+    if (blog.authorId !== userId) {
+      await prisma.notification.create({
         data: {
-          type: parentId ? "REPLY" : "COMMENT",
+          type: "BLOG_LIKE",
           issuerId: userId,
-          receiverId: blog.authorId
-        }
-      })
-    
+          receiverId: blog.authorId,
+          blogId: blogId,
+        },
+      });
+      // Invalidate cache for the target user's profile Data
+      await redisClient.del(`user_data:${blog.authorId}`);
+    }
 
     return response;
   });
@@ -60,7 +64,7 @@ export const createCommentController = asyncHandler(async (req, res) => {
 
   await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
 
-  await deleteCommentCaches(blogId)
+  await deleteCommentCaches(blogId);
 
   return res.status(201).json({
     message: "Comment created successfully",
@@ -102,7 +106,7 @@ export const deleteCommentController = asyncHandler(async (req, res) => {
   // Invalidate cache for the blog and its comments
   await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
 
-  await deleteCommentCaches(blogId)
+  await deleteCommentCaches(blogId);
 
   return res.status(200).json({
     message: "Comment deleted successfully",
@@ -139,12 +143,9 @@ export const updateCommentController = asyncHandler(async (req, res) => {
     data: { comment, isEdited: true },
   });
 
-  await invalidateCache([
-    `blog:${blogId}`,
-    `user_blogs:${userId}`,
-  ]);
+  await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
 
-  await deleteCommentCaches(blogId)
+  await deleteCommentCaches(blogId);
 
   return res.status(200).json({
     message: "Comment updated successfully",
@@ -194,8 +195,8 @@ export const getCommentsController = asyncHandler(async (req, res) => {
   if (!comments) throw new Error("No comments found");
 
   comments.forEach((e) => {
-    e.userId === userId ? e.role = "author" : e.role = "user";
-  })
+    e.userId === userId ? (e.role = "author") : (e.role = "user");
+  });
 
   await setCachedData(cacheKey, comments);
 
@@ -204,5 +205,3 @@ export const getCommentsController = asyncHandler(async (req, res) => {
     data: comments,
   });
 });
-
-

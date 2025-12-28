@@ -72,7 +72,7 @@ model Notification {
   blogId      String?          @db.Uuid
   
   commentId   String?          @db.Uuid
-  commentText String?          @db.Uuid
+  commentText String?   
 
   createdAt   DateTime         @default(now())
 

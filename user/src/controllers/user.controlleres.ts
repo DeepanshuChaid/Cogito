@@ -145,19 +145,34 @@ export const getUserDataController = asyncHandler(
       });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
-    });
+    const [user, unreadNotificationsCount] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePicture: true,
+        }
+      }),
+      prisma.notification.count({
+        where: {
+          receiverId: req.user.id,
+          isRead: false,
+        }
+      })
+    ]);
 
     if (!user) {
       throw new AppError("User not found", 404);
     }
 
-    await redisClient.set(cacheKey, JSON.stringify(user), { EX: 3600 });
+    const userData = { ...user, unreadNotificationsCount };
+    await redisClient.set(cacheKey, JSON.stringify(userData), { EX: 3600 });
 
     res.status(HTTPSTATUS.OK).json({
       message: "Successfully User Data Fetched",
-      user,
+      user: userData,
     });
   },
 );

@@ -1,6 +1,7 @@
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
 import { invalidateCache, getCachedData, setCachedData, deleteCommentCaches, } from "../utils/redis.utils.js";
+import { redisClient } from "../server.js";
 // *************************** //
 // CREATE COMMENTS CONTROLLER
 // *************************** //
@@ -30,19 +31,24 @@ export const createCommentController = asyncHandler(async (req, res) => {
             where: { id: blogId },
             data: {
                 engagementScore: { increment: 6 }, // Comments are valuable
-            }
+            },
         });
         await tx.notification.create({
             data: {
                 type: parentId ? "REPLY" : "COMMENT",
                 issuerId: userId,
-                receiverId: blog.authorId
-            }
+                receiverId: blog.authorId,
+                commentId: response.id,
+                commentText: comment,
+                blogId: blogId,
+            },
         });
         return response;
     });
     if (!newComment)
         throw new Error("Error creating comment");
+    // Invalidate cache for the target user's profile Data
+    await redisClient.del(`user_data:${blog.authorId}`);
     await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
     await deleteCommentCaches(blogId);
     return res.status(201).json({
@@ -109,10 +115,7 @@ export const updateCommentController = asyncHandler(async (req, res) => {
         where: { id: commentId },
         data: { comment, isEdited: true },
     });
-    await invalidateCache([
-        `blog:${blogId}`,
-        `user_blogs:${userId}`,
-    ]);
+    await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
     await deleteCommentCaches(blogId);
     return res.status(200).json({
         message: "Comment updated successfully",
@@ -151,7 +154,7 @@ export const getCommentsController = asyncHandler(async (req, res) => {
     if (!comments)
         throw new Error("No comments found");
     comments.forEach((e) => {
-        e.userId === userId ? e.role = "author" : e.role = "user";
+        e.userId === userId ? (e.role = "author") : (e.role = "user");
     });
     await setCachedData(cacheKey, comments);
     return res.status(200).json({

@@ -71,6 +71,9 @@ export const followUserController = asyncHandler(async (req, res) => {
     },
   })
 
+  // Invalidate cache for the target user's profile Data
+  await redisClient.del(`user_data:${targetUser.id}`)
+
   await redisClient.del(cacheKey);
 
   return res.status(201).json({

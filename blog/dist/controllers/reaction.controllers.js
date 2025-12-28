@@ -6,7 +6,7 @@ import { invalidateCache } from "../utils/redis.utils.js";
 // *************************** //
 export const likeBlogController = asyncHandler(async (req, res) => {
     const blogId = req.params.id;
-    const userId = req.user.id;
+    const userId = req?.user?.id;
     const blog = await prisma.blog.findUnique({
         where: { id: blogId },
         select: { authorId: true }
@@ -28,9 +28,12 @@ export const likeBlogController = asyncHandler(async (req, res) => {
             data: {
                 type: "BLOG_LIKE",
                 issuerId: userId,
-                receiverId: blog.authorId
+                receiverId: blog.authorId,
+                blogId: blogId
             }
         });
+        // Invalidate cache for the target user's profile Data
+        await redisClient.del(`user_data:${blog.authorId}`);
         likesDelta = 1;
         engagementDelta = 4;
     }
@@ -52,9 +55,12 @@ export const likeBlogController = asyncHandler(async (req, res) => {
             data: {
                 type: "BLOG_LIKE",
                 issuerId: userId,
-                receiverId: blog.authorId
+                receiverId: blog.authorId,
+                blogId: blogId
             }
         });
+        // Invalidate cache for the target user's profile Data
+        await redisClient.del(`user_data:${blog.authorId}`);
         likesDelta = 1;
         dislikesDelta = -1;
         engagementDelta = 5;

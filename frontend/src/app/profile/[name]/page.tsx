@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import API from "@/lib/API";
 import { useEffect, useState } from "react";

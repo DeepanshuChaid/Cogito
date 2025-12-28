@@ -1,6 +1,8 @@
 
+import { AppError } from "../middlewares/appError.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
+import { redisClient } from "../server.js";
 import { invalidateCache } from "../utils/redis.utils.js";
 
 // *************************** //
@@ -8,7 +10,8 @@ import { invalidateCache } from "../utils/redis.utils.js";
 // *************************** //
 export const likeBlogController = asyncHandler(async (req, res) => {
   const blogId = req.params.id;
-  const userId = req.user.id;
+  const userId = req?.user?.id;
+  if (!userId) throw new AppError("Unauthorized", 404)
 
   const blog = await prisma.blog.findUnique({
     where: { id: blogId},
@@ -30,13 +33,20 @@ export const likeBlogController = asyncHandler(async (req, res) => {
       data: { userId, blogId, type: "LIKE" },
     });
 
-    await prisma.notification.create({
-      data: {
-        type: "BLOG_LIKE",
-        issuerId: userId,
-        receiverId: blog.authorId
-      }
-    })
+    // Create notification if not the author
+    if (blog.authorId !== userId) {
+      await prisma.notification.create({
+        data: {
+          type: "BLOG_LIKE",
+          issuerId: userId,
+          receiverId: blog.authorId,
+          blogId: blogId
+        }
+      })
+      // Invalidate cache for the target user's profile Data
+      await redisClient.del(`user_data:${blog.authorId}`)
+    }
+
 
     likesDelta = 1;
     engagementDelta = 4;
@@ -59,13 +69,19 @@ export const likeBlogController = asyncHandler(async (req, res) => {
       data: { type: "LIKE" },
     });
 
-    await prisma.notification.create({
-      data: {
-        type: "BLOG_LIKE",
-        issuerId: userId,
-        receiverId: blog.authorId
-      }
-    })
+    // Create notification if not the author
+    if (blog.authorId !== userId) {
+      await prisma.notification.create({
+        data: {
+          type: "BLOG_LIKE",
+          issuerId: userId,
+          receiverId: blog.authorId,
+          blogId: blogId
+        }
+      })
+      // Invalidate cache for the target user's profile Data
+      await redisClient.del(`user_data:${blog.authorId}`)
+    }
 
     likesDelta = 1;
     dislikesDelta = -1;
@@ -146,3 +162,6 @@ export const dislikeBlogController = asyncHandler(async (req, res) => {
 
   res.status(200).json({ message: "Dislike processed" });
 });
+
+
+
