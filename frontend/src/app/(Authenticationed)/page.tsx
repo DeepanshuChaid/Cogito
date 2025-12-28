@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import Link from "next/link"; 
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/api/auth";
+import { useAuth } from "@/context/auth.provider";
 
 export default function Home() {
 
@@ -21,11 +22,8 @@ export default function Home() {
 
 
 
-  const {data: user, isPending, error, refetch} = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: getCurrentUser,
-    staleTime: 300 * 1000,
-  })
+
+  const { user, isPending, error } = useAuth()
 
   if (error) {
     return (
@@ -40,12 +38,12 @@ export default function Home() {
   }
 
   if (!user) {
-    return <p>{error}</p>;
+    return <p>{JSON.stringify(error)}</p>;
   }
 
   return (
     <>
-      <p>{JSON.stringify(user)}</p>
+      <p>{JSON.stringify(user, null, 2)}</p>
 
       <Button onClick={logout}>Logout</Button>
 
