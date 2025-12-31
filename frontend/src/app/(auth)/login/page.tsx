@@ -93,14 +93,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center">
-      <div className="flex w-full max-w-sm flex-col gap-[40px]">
+    <div className="flex items-center justify-center h-full">
+      <div className="flex w-full flex-col gap-[40px]">
         <Link href="/" className="flex item-center self-center">
           <Image src="/Logo.png" alt="logo" height={40} width={104} className="h-[40px] w-auto"
           />
         </Link>
 
-        <div className="Card">
+        <div className="Card max-w-[536px] m-auto">
           <div className="flex flex-col justify-center items-center gap-[4px]">
             <h3 className="text-24 font-semibold text-white-200">Welcome back</h3>
             <p className="text-16 text-white-400 font-medium">Login to your account to continue</p>
@@ -116,13 +116,16 @@ export default function LoginPage() {
             </span>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
-            {/* Email */}
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex flex-col gap-7 w-full"
+          >
+            {/* Email Field */}
             <div className="flex flex-col gap-1">
               <label
                 htmlFor="email"
-                className={`text-[16px] font-semibold leading-[160%] ${
-                  errors.email ? "text-red-500" : "text-white"
+                className={`font-semibold text-[16px] leading-[160%] ${
+                  errors.email ? "text-red-500" : "text-[#F2F2F2]"
                 }`}
               >
                 Email
@@ -131,20 +134,20 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 {...register("email")}
-                placeholder="Enter your email"
-                className={`w-full h-[53px] px-4 bg-[#1A1A1A] border ${
+                placeholder="Enter your Email"
+                className={`h-[53px] w-full px-4 bg-[#1A1A1A] border ${
                   errors.email ? "border-red-500" : "border-[rgba(255,255,255,0.1)]"
-                } rounded-[12px] shadow-inner text-white placeholder-gray-400`}
+                } rounded-[12px] shadow-[inset_0px_8px_18px_rgba(0,0,0,0.18)] text-[14px] font-normal leading-[150%] text-[#F2F2F2] placeholder-[#F2F2F2]`}
               />
-              {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+              {errors.email && <p className="text-red-500 text-[14px]">{errors.email.message}</p>}
             </div>
 
-            {/* Password */}
+            {/* Password Field */}
             <div className="flex flex-col gap-1">
               <label
                 htmlFor="password"
-                className={`text-[16px] font-semibold leading-[160%] ${
-                  errors.password ? "text-red-500" : "text-white"
+                className={`font-semibold text-[16px] leading-[160%] ${
+                  errors.password ? "text-red-500" : "text-[#F2F2F2]"
                 }`}
               >
                 Password
@@ -153,19 +156,27 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 {...register("password")}
-                placeholder="Enter your password"
-                className={`w-full h-[53px] px-4 bg-[#1A1A1A] border ${
+                placeholder="Enter your Password"
+                className={`h-[53px] w-full px-4 bg-[#1A1A1A] border ${
                   errors.password ? "border-red-500" : "border-[rgba(255,255,255,0.1)]"
-                } rounded-[12px] shadow-inner text-white placeholder-gray-400`}
+                } rounded-[12px] shadow-[inset_0px_8px_18px_rgba(0,0,0,0.18)] text-[14px] font-normal leading-[150%] text-[#F2F2F2] placeholder-[#F2F2F2]`}
               />
-              {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
+              {errors.password && <p className="text-red-500 text-[14px]">{errors.password.message}</p>}
+
+              {/* Forgot Password */}
+              <a
+                href="/forgot-password"
+                className="text-[#D9D9D9] font-semibold text-[14px] mt-1 self-start"
+              >
+                Forgot Password?
+              </a>
             </div>
 
-            {/* Submit Button */}
+            {/* Login Button */}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-[53px] bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-[12px] transition"
+              className="flex justify-center items-center h-[57px] w-full bg-[#CCCCCC] border border-[rgba(0,0,0,0.1)] rounded-[12px] shadow-[0px_8px_5px_#000000,inset_0px_12px_14px_rgba(255,255,255,0.87)] font-semibold text-[20px] leading-[165%] text-[#080808] hover:bg-gray-300 transition"
             >
               {isSubmitting ? "Logging in..." : "Login"}
             </button>
