@@ -4,7 +4,10 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
   return (
     <>
       <AuthProvider>
-        {children}
+        <div className="flex flex-col min-h-screen">
+          ncjan
+          {children}
+        </div>
       </AuthProvider>
     </>
   )

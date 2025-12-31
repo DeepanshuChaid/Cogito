@@ -4,6 +4,33 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-white-50:  #FAFAFA;
+  --color-white-100: #F2F2F2;
+  --color-white-200: #E6E6E6;
+  --color-white-300: #D9D9D9;
+  --color-white-400: #CCCCCC;
+  --color-white-500: #BFBFBF;
+  --color-white-600: #B3B3B3;
+  --color-white-700: #A6A6A6;
+  --color-white-800: #999999;
+
+  /* GREY */
+  --color-grey-50:  #8C8C8C;
+  --color-grey-100: #808080;
+  --color-grey-200: #737373;
+  --color-grey-300: #666666;
+  --color-grey-400: #595959;
+  --color-grey-500: #4D4D4D;
+  --color-grey-600: #404040;
+  --color-grey-700: #333333;
+  --color-grey-800: #262626;
+
+  /* BLACK */
+  --color-black-50:  #1A1A1A;
+  --color-black-100: #131313;
+  --color-black-200: #0D0D0D;
+  --color-black-300: #080808;
+  
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -44,6 +71,10 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
+  --radius-normal: 343px;
+
+  --radius-pill: var(--radius-normal);
 }
 
 :root {
@@ -118,11 +149,78 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-  }
+  } 
   body {
-    @apply bg-background text-foreground overflow-hidden;
+    @apply bg-black-200 text-white-400 overflow-hidden;
   }
   button {
     cursor: pointer;
   }
+}
+
+/* =========================
+   TEXT SYSTEM – MANROPE
+   ========================= */
+
+.text-12 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  line-height: 150%;
+  letter-spacing: 0.005em;
+}
+
+.text-14 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  line-height: 150%;
+  letter-spacing: 0.01em;
+}
+
+.text-16 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  line-height: 162.5%;
+  letter-spacing: 0.05em;
+}
+
+.text-18 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  line-height: 172.2%;
+  letter-spacing: 0.05em;
+}
+
+.text-20 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 20px;
+  line-height: 165%;
+}
+
+.text-24 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 24px;
+  line-height: 145.8%;
+}
+
+/* ===== Headings ===== */
+
+.text-32 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 32px;
+  line-height: 140.6%;
+  letter-spacing: -0.01em;
+}
+
+.text-40 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 40px;
+  line-height: 130%;
+  letter-spacing: -0.02em;
+}
+
+.text-48 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 48px;
+  line-height: 118.75%;
+  letter-spacing: -0.03em;
 }

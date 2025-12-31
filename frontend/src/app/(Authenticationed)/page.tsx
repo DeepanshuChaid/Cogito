@@ -5,15 +5,17 @@ import API from "@/lib/API";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import Link from "next/link"; 
-import { useQuery } from "@tanstack/react-query";
-import { getCurrentUser } from "@/api/auth";
 import { useAuth } from "@/context/auth.provider";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Home() {
+
+  const queryClient = useQueryClient();
 
   const logout = async () => {
     try {
       await API.post("/user/logout");
+      await queryClient.invalidateQueries({queryKey: ["currentUser"]})
       window.location.reload();
     } catch (err) {
       console.error("Logout failed:", err);

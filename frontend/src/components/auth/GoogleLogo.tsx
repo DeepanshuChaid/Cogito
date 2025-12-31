@@ -2,31 +2,49 @@ import { Button } from "../ui/button";
 
 const GoogleOauthButton = (props: { label: string }) => {
   const { label } = props;
-  const baseURL = process.env.NEXT_PUBLIC_API_URL
+  const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleClick = () => {
     window.location.href = `${baseURL}/user/google`;
   };
+
   return (
     <Button
       onClick={handleClick}
       variant="outline"
       type="button"
-      className="w-full"
+      className="w-full flex items-center justify-center gap-3 px-3 py-3 h-[55px]
+                 bg-[#1A1A1A] border border-white/10 rounded-lg
+                 shadow-[0_4px_4px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(235,235,235,0.12)]
+                 !text-white text-[18px]
+                 hover:bg-black-50 hover:shadow-[0_6px_6px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(235,235,235,0.12)]
+                 active:bg-[#111111] active:shadow-[0_2px_2px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(235,235,235,0.12)]
+                 transition-all duration-150 ease-in-out"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  
+      <svg
+        className="h-6 w-6"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <path
-          d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
-          fill="currentColor"
+          d="M21.8055 10.0415H21V10H12V14H17.6515C16.827 16.3285 14.6115 18 12 18C8.6865 18 6 15.3135 6 12C6 8.6865 8.6865 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C6.4775 2 2 6.4775 2 12C2 17.5225 6.4775 22 12 22C17.5225 22 22 17.5225 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z"
+          fill="#FFC107"
+        />
+        <path
+          d="M3.15308 7.3455L6.43858 9.755C7.32758 7.554 9.48058 6 12.0001 6C13.5296 6 14.9211 6.577 15.9806 7.5195L18.8091 4.691C17.0231 3.0265 14.6341 2 12.0001 2C8.15908 2 4.82808 4.1685 3.15308 7.3455Z"
+          fill="#FF3D00"
+        />
+        <path
+          d="M11.9999 21.9999C14.5829 21.9999 16.9299 21.0114 18.7044 19.4039L15.6094 16.7849C14.5719 17.5744 13.3037 18.0013 11.9999 17.9999C9.39891 17.9999 7.19041 16.3414 6.35841 14.0269L3.09741 16.5394C4.75241 19.7779 8.11341 21.9999 11.9999 21.9999Z"
+          fill="#4CAF50"
         />
       </svg>
+
       {label} with Google
     </Button>
   );
 };
 
 export default GoogleOauthButton;
-
-
-
-

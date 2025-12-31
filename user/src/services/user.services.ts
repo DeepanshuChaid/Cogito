@@ -5,7 +5,8 @@ import {
   generateRefreshToken,
 } from "../utils/token.utils.js";
 
-export const loginOrCreateUserService = async (data) => {
+
+export const loginOrCreateUserService = async (data: any) => {
   const { provider, providerId, displayName, email, picture, res } = data;
 
   try {

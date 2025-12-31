@@ -103,7 +103,7 @@ export const markNotificationsAsReadController = asyncHandler(async (req, res) =
   });
 
   // Invalidate cache
-  const keys = await redisClient.keys(`notifications:${userId}:*`);
+  const keys: any = await redisClient.keys(`notifications:${userId}:*`);
   if (keys.length > 0) {
     await redisClient.del(...keys);
   }
@@ -193,7 +193,7 @@ export const deleteNotificationController = asyncHandler(async (req, res) => {
   });
 
   // Invalidate cache
-  const keys = await redisClient.keys(`notifications:${userId}:*`);
+  const keys: any = await redisClient.keys(`notifications:${userId}:*`);
   if (keys.length > 0) {
     await redisClient.del(...keys);
   }

@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect } from "react";
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "../api/auth"; // your fetch function
+import { useRouter } from "next/navigation"
 
 type AuthContextType = {
   user: User | null;
@@ -41,6 +42,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const user = data?.user ?? null;
+  const router = useRouter();
+  useEffect(() => {
+    if (!isPending && !user) {
+      router.push("/login");
+    }
+  }, [isPending, user, router]);
 
   return (
     <AuthContext.Provider
