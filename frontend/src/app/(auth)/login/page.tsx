@@ -12,7 +12,11 @@ import "./login.css"
 import API from "@/lib/API";
 import { toast } from "@/hooks/use-toast";
 import GoogleOauthButton from "@/components/auth/GoogleLogo";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react"; // You already use lucide-react
 
+
+// FORM SCHEMAS
 const formSchema = z.object({
   email: z.string().email("Invalid email").trim().min(1, "Email is required"),
   password: z.string().min(6, "Password must be at least 6 characters").trim(),
@@ -22,6 +26,9 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+
+  // Inside your component
+  const [showPassword, setShowPassword] = useState(false);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: FormValues) => {
@@ -115,7 +122,7 @@ export default function LoginPage() {
             </div>
 
             {/* Password Field */}
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 relative">
               <label
                 htmlFor="password"
                 className={`font-semibold text-[16px] leading-[160%] ${
@@ -124,16 +131,29 @@ export default function LoginPage() {
               >
                 Password
               </label>
+
               <input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 {...register("password")}
                 placeholder="Enter your Password"
-                className={`py-[16px] w-full px-4 bg-[#1A1A1A] border ${
+                className={`py-[16px] w-full px-4 pr-12 bg-[#1A1A1A] border ${
                   errors.password ? "border-red-500" : "border-[rgba(255,255,255,0.05)]"
                 } rounded-[12px] shadow-[inset_0px_8px_18px_rgba(0,0,0,0.18)] text-[14px] font-normal leading-[150%] text-[#F2F2F2] placeholder-[#F2F2F2]`}
               />
-              {errors.password && <p className="text-red-500 text-[14px]">{errors.password.message}</p>}
+
+              {/* Eye button */}
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-4 flex items-center text-[#BFBFBF] hover:text-white"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+
+              {errors.password && (
+                <p className="text-red-500 text-[14px]">{errors.password.message}</p>
+              )}
 
               {/* Forgot Password */}
               <a
