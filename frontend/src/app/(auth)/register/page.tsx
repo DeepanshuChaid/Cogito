@@ -248,8 +248,18 @@ export default function SignUpPage() {
                {isPending ? "Registering..." : "Register"}
              </button>
            </form>
+           <div className="text-center text-sm  text-16 text-white-700">
+             Already have an account?{" "}
+             <Link href="/login" className="underline font-medium text-white-100 underline-offset-4">
+                Login
+             </Link>
+           </div>
          </div>
        </div>
+      <div className="text-12 text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary  ">
+        By clicking continue, you agree to our{" "}
+        <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+      </div>
     </div>
   );
 }

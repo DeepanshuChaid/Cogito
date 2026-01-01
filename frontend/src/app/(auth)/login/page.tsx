@@ -121,7 +121,7 @@ export default function LoginPage() {
                 placeholder="Enter your Email"
                 className={`py-[16px] w-full px-4 bg-[#1A1A1A] border ${
                   errors.email ? "border-red-500" : "border-[rgba(255,255,255,0.1)]"
-                } rounded-[12px] shadow-[inset_0px_8px_18px_rgba(0,0,0,0.18)] text-[14px] font-normal leading-[150%] text-[#F2F2F2] placeholder-[#F2F2F2]`}
+                } rounded-[12px] shadow-[inset_0px_8px_18px_rgba(0,0,0,0.18)] text-[14px] font-normal leading-[150%] text-[#F2F2F2] placeholder-[#F2F2F2] focus:outline-none  focus:border-white-300 focus:ring-2 focus:ring-white-200/40`}
               />
               {errors.email && <p className="text-red-500 text-[14px]">{errors.email.message}</p>}
             </div>
@@ -144,7 +144,7 @@ export default function LoginPage() {
                 placeholder="Enter your Password"
                 className={`py-[16px] w-full px-4 pr-12 bg-[#1A1A1A] border ${
                   errors.password ? "border-red-500" : "border-[rgba(255,255,255,0.05)]"
-                } rounded-[12px] shadow-[inset_0px_8px_18px_rgba(0,0,0,0.18)] text-[14px] font-normal leading-[150%] text-[#F2F2F2] placeholder-[#F2F2F2]`}
+                } rounded-[12px] shadow-[inset_0px_8px_18px_rgba(0,0,0,0.18)] text-[14px] font-normal leading-[150%] text-[#F2F2F2] placeholder-[#F2F2F2] focus:outline-none  focus:border-white-300 focus:ring-2 focus:ring-white-200/40`}
               />
 
               {/* Eye button */}
@@ -181,9 +181,9 @@ export default function LoginPage() {
           </form>
 
           <div className="text-center text-sm  text-16 text-white-700">
-            Already have an account?{" "}
+            Don't have an account?{" "}
             <Link href="/register" className="underline font-medium text-white-100 underline-offset-4">
-              Sign in
+              Register
             </Link>
           </div>
           
