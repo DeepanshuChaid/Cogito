@@ -10,9 +10,8 @@ export const createCommentController = asyncHandler(async (req, res) => {
     const blogId = req.params.blogId;
     const { comment, parentId } = req.body;
     const blog = await prisma.blog.findUnique({
-        where: {
-            id: blogId,
-        },
+        where: { id: blogId, },
+        select: { authorId: true, },
     });
     if (!blog)
         throw new Error("Blog not found");
@@ -33,22 +32,23 @@ export const createCommentController = asyncHandler(async (req, res) => {
                 engagementScore: { increment: 6 }, // Comments are valuable
             },
         });
-        await tx.notification.create({
-            data: {
-                type: parentId ? "REPLY" : "COMMENT",
-                issuerId: userId,
-                receiverId: blog.authorId,
-                commentId: response.id,
-                commentText: comment,
-                blogId: blogId,
-            },
-        });
+        // Create notification if not author
+        if (blog.authorId !== userId) {
+            await prisma.notification.create({
+                data: {
+                    type: "BLOG_LIKE",
+                    issuerId: userId,
+                    receiverId: blog.authorId,
+                    blogId: blogId,
+                },
+            });
+            // Invalidate cache for the target user's profile Data
+            await redisClient.del(`user_data:${blog.authorId}`);
+        }
         return response;
     });
     if (!newComment)
         throw new Error("Error creating comment");
-    // Invalidate cache for the target user's profile Data
-    await redisClient.del(`user_data:${blog.authorId}`);
     await invalidateCache([`blog:${blogId}`, `user_blogs:${userId}`]);
     await deleteCommentCaches(blogId);
     return res.status(201).json({

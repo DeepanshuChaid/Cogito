@@ -20,7 +20,7 @@ redisClient
     .then(() => {
     console.log("Redis connected");
 })
-    .catch(err => console.error("REDIS IS A BITCH MF DID NOT CONNECTED"));
+    .catch((err) => console.error("REDIS IS A BITCH MF DID NOT CONNECTED"));
 const app = express();
 const PORT = process.env.PORT || 3000;
 cloudinary.config({
@@ -35,6 +35,9 @@ app.use(cors({
     origin: process.env.FRONTEND_URL,
     credentials: true,
 }));
+if (!process.env.SESSION_SECRET) {
+    throw new Error("SESSION_SECRET is missing");
+}
 app.use(session({
     name: "session",
     secret: process.env.SESSION_SECRET,

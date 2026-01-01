@@ -135,7 +135,7 @@ export default function LoginPage() {
                 type="email"
                 {...register("email")}
                 placeholder="Enter your Email"
-                className={`h-[53px] w-full px-4 bg-[#1A1A1A] border ${
+                className={`py-[16px] w-full px-4 bg-[#1A1A1A] border ${
                   errors.email ? "border-red-500" : "border-[rgba(255,255,255,0.1)]"
                 } rounded-[12px] shadow-[inset_0px_8px_18px_rgba(0,0,0,0.18)] text-[14px] font-normal leading-[150%] text-[#F2F2F2] placeholder-[#F2F2F2]`}
               />
@@ -157,8 +157,8 @@ export default function LoginPage() {
                 type="password"
                 {...register("password")}
                 placeholder="Enter your Password"
-                className={`h-[53px] w-full px-4 bg-[#1A1A1A] border ${
-                  errors.password ? "border-red-500" : "border-[rgba(255,255,255,0.1)]"
+                className={`py-[16px] w-full px-4 bg-[#1A1A1A] border ${
+                  errors.password ? "border-red-500" : "border-[rgba(255,255,255,0.05)]"
                 } rounded-[12px] shadow-[inset_0px_8px_18px_rgba(0,0,0,0.18)] text-[14px] font-normal leading-[150%] text-[#F2F2F2] placeholder-[#F2F2F2]`}
               />
               {errors.password && <p className="text-red-500 text-[14px]">{errors.password.message}</p>}
@@ -176,7 +176,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex justify-center items-center h-[57px] w-full bg-[#CCCCCC] border border-[rgba(0,0,0,0.1)] rounded-[12px] shadow-[0px_8px_5px_#000000,inset_0px_12px_14px_rgba(255,255,255,0.87)] font-semibold text-[20px] leading-[165%] text-[#080808] hover:bg-gray-300 transition"
+              className="flex justify-center items-center py-[12px] w-full bg-[#CCCCCC] border border-[rgba(0,0,0,0.1)] rounded-[12px] shadow-[0px_8px_5px_#000000,inset_0px_12px_14px_rgba(255,255,255,0.87)] font-semibold text-[20px] leading-[165%] text-[#080808] hover:bg-gray-300 transition"
             >
               {isSubmitting ? "Logging in..." : "Login"}
             </button>

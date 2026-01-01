@@ -9,7 +9,7 @@ import passport from "passport";
 import session from "express-session";
 import { isAuthenticatedMiddleware } from "./middlewares/isAuthenticatedMiddleware.js";
 import { v2 as cloudinary } from "cloudinary";
-import {createClient} from "redis"
+import { createClient } from "redis";
 import followRoutes from "./routes/follow.routes.js";
 import notificationRoutes from "./routes/notifications.routes.js";
 
@@ -22,10 +22,7 @@ redisClient
   .then(() => {
     console.log("Redis connected");
   })
-  .catch(err => console.error("REDIS IS A BITCH MF DID NOT CONNECTED"));
-
-
-
+  .catch((err) => console.error("REDIS IS A BITCH MF DID NOT CONNECTED"));
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -47,6 +44,10 @@ app.use(
   }),
 );
 
+if (!process.env.SESSION_SECRET) {
+  throw new Error("SESSION_SECRET is missing");
+}
+
 app.use(
   session({
     name: "session",
@@ -66,8 +67,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use("/api/user", userRoutes);
-app.use("/api/user", isAuthenticatedMiddleware, followRoutes)
-app.use("/api/notification", isAuthenticatedMiddleware, notificationRoutes)
+app.use("/api/user", isAuthenticatedMiddleware, followRoutes);
+app.use("/api/notification", isAuthenticatedMiddleware, notificationRoutes);
 
 app.use(errorHandler);
 
@@ -88,8 +89,4 @@ app.listen(PORT, async () => {
   console.log("Server is running on port " + PORT);
   const data = await prisma.user.findMany();
   console.log(data);
-
 });
-
-
-
