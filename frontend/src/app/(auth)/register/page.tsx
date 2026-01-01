@@ -28,7 +28,8 @@ import {
 import { Input } from "@/components/ui/input";
 import API from "@/lib/API";
 
-const formSchema = z.object({
+const formSchema = z
+.object({
   name: z
     .string()
     .min(1, "Name is required")
@@ -38,7 +39,11 @@ const formSchema = z.object({
     }),
   email: z.string().email("Invalid email").trim(),
   password: z.string().min(6, "Password must be at least 6 characters").trim(),
-  confirmPassword: z.string().min(6, "Password must be at least 6 characters").trim()
+  confirmPassword: z.string().min(6, "Password must be at least 6 characters").trim(),
+})
+.refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
