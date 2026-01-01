@@ -92,7 +92,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col items-center gap-6 min-h-svh px-2 py-12 md:p-2">
+    <div className="flex flex-col justify-center items-center gap-6 min-h-svh px-2 py-12 md:p-2">
       <div className="flex w-full flex-col gap-[32px] justify-center items-center">
         <Link href="/" className="flex item-center self-center">
           <Image src="/Logo.png" alt="logo" height={40} width={104} className="h-[40px] w-auto"
