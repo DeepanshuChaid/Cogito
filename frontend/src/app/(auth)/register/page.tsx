@@ -83,8 +83,6 @@ export default function SignUpPage() {
       const response = await API.post("/user/register", data);
       toast.success("Registration successful!");
     } catch (error) {
-      console.error("Error during registration:", error);
-      toast.error(error.response?.data?.message || "Registration failed");
     }
   };
 
