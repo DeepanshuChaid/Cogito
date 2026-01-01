@@ -55,7 +55,7 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -91,6 +91,7 @@ export default function LoginPage() {
 
           <GoogleOauthButton label="Sign up" />
 
+          {/* DIVIDER */}
           <div className="relative flex items-center justify-center w-full">
             <div className="absolute inset-x-0 h-px bg-[#666666] rounded-md"></div>
 
