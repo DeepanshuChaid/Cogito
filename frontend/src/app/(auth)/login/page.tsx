@@ -29,7 +29,6 @@ import { Input } from "@/components/ui/input";
 import API from "@/lib/API";
 import { toast } from "@/hooks/use-toast";
 import { useEffect } from "react";
-import Logo from "@/components/logo";
 import GoogleOauthButton from "@/components/auth/GoogleLogo";
 
 const formSchema = z.object({
@@ -93,8 +92,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-6 h-svh p-6 md:p-10">
-      <div className="flex w-full flex-col gap-[40px] justify-center items-center">
+    <div className="flex flex-col items-center gap-6 min-h-svh px-2 py-12 md:p-2">
+      <div className="flex w-full flex-col gap-[32px] justify-center items-center">
         <Link href="/" className="flex item-center self-center">
           <Image src="/Logo.png" alt="logo" height={40} width={104} className="h-[40px] w-auto"
           />
@@ -102,8 +101,8 @@ export default function LoginPage() {
 
         <div className="Card max-w-[536px]">
           <div className="flex flex-col justify-center items-center gap-[4px]">
-            <h3 className="text-24 font-semibold text-white-200">Welcome back</h3>
-            <p className="text-16 text-white-400 font-medium">Login to your account to continue</p>
+            <h3 className="font-semibold text-white-200 max-[900px]:text-24 text-20">Welcome back</h3>
+            <p className="max-[900px]:text-16 text-14 text-white-400 font-medium">Login to your account to continue</p>
           </div>
 
           <GoogleOauthButton label="Sign up" />
@@ -176,7 +175,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex justify-center items-center py-[12px] w-full bg-[#CCCCCC] border border-[rgba(0,0,0,0.1)] rounded-[12px] shadow-[0px_8px_5px_#000000,inset_0px_12px_14px_rgba(255,255,255,0.87)] font-semibold text-[20px] leading-[165%] text-[#080808] hover:bg-gray-300 transition"
+              className="flex justify-center items-center py-[12px] w-full bg-[#CCCCCC] border border-[rgba(0,0,0,0.1)] rounded-[12px] shadow-[0px_8px_5px_#000000,inset_0px_12px_14px_rgba(255,255,255,0.87)] font-medium text-[20px] leading-[165%] text-[#080808] hover:bg-gray-300 transition sm:text-16"
             >
               {isSubmitting ? "Logging in..." : "Login"}
             </button>
@@ -184,7 +183,7 @@ export default function LoginPage() {
 
           <div className="text-center text-sm  text-16 text-white-700">
             Already have an account?{" "}
-            <Link href="/" className="underline font-semibold underline-offset-4">
+            <Link href="/register" className="underline font-medium text-white-100 underline-offset-4">
               Sign in
             </Link>
           </div>
