@@ -38,6 +38,7 @@ const formSchema = z.object({
     }),
   email: z.string().email("Invalid email").trim(),
   password: z.string().min(6, "Password must be at least 6 characters").trim(),
+  confirmPassword: z.string().min(6, "Password must be at least 6 characters").trim()
 });
 
 type FormValues = z.infer<typeof formSchema>;

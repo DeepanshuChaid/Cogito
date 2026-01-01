@@ -8,7 +8,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { Loader } from "lucide-react";
-import "./login.css"
 import API from "@/lib/API";
 import { toast } from "@/hooks/use-toast";
 import GoogleOauthButton from "@/components/auth/GoogleLogo";
@@ -80,9 +79,14 @@ export default function LoginPage() {
         </Link>
 
         <div className="flex flex-col justify-center items-center p-6 gap-8 w-full bg-[#141414] rounded-[12px] shadow-[0_0_1px_1px_rgba(255,255,255,0.13),0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] max-w-[536px]">
+          {/* HEADING */}
           <div className="flex flex-col justify-center items-center gap-[4px]">
-            <h3 className="font-semibold text-white-200 max-[900px]:text-24 text-20">Welcome back</h3>
-            <p className="max-[900px]:text-16 text-14 text-white-400 font-medium">Login to your account to continue</p>
+            <h3 className="font-semibold text-white-200 text-20 md:text-24 lg:text-28">
+              Welcome back
+            </h3>
+            <p className="text-14 md:text-16 lg:text-18 text-white-400 font-medium">
+              Login to your account to continue
+            </p>
           </div>
 
           <GoogleOauthButton label="Sign up" />
