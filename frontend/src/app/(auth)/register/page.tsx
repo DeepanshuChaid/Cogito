@@ -78,7 +78,7 @@ export default function SignUpPage() {
   })
 
   const onSubmit = async (data: FormValues) => {
-    if (!isPending) return
+    if (isPending) return
 
     mutate(data)
   };
@@ -96,14 +96,14 @@ export default function SignUpPage() {
            {/* HEADING */}
            <div className="flex flex-col justify-center items-center gap-[4px]">
              <h3 className="font-semibold text-white-200 text-20 md:text-24 lg:text-28">
-               Welcome back
+               Create An Account
              </h3>
              <p className="text-14 md:text-16 lg:text-18 text-white-400 font-medium">
-               Login to your account to continue
+               Register with your Email or Google account
              </p>
            </div>
 
-           <GoogleOauthButton label="Sign up" />
+           <GoogleOauthButton label="Sign In" />
 
            {/* DIVIDER */}
            <div className="relative flex items-center justify-center w-full">
@@ -159,7 +159,7 @@ export default function SignUpPage() {
                  placeholder="Enter your Email"
                  className={`py-[16px] w-full px-4 bg-[#1A1A1A] border ${
                    errors.email ? "border-red-500" : "border-[rgba(255,255,255,0.1)]"
-                 } rounded-[12px] shadow-[inset_0px_8px_18px_rgba(0,0,0,0.18)] text-[14px] font-normal leading-[150%] text-[#F2F2F2] placeholder-[#F2F2F2]`}
+                 } rounded-[12px] shadow-[inset_0px_8px_18px_rgba(0,0,0,0.18)] text-[14px] font-normal leading-[150%] text-[#F2F2F2] placeholder-[#F2F2F2] focus:outline-none  focus:border-white-300 focus:ring-2 focus:ring-white-200/40`}
                />
                {errors.email && <p className="text-red-500 text-[14px]">{errors.email.message}</p>}
              </div>

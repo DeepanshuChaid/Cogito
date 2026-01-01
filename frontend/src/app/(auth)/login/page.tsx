@@ -89,7 +89,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <GoogleOauthButton label="Sign up" />
+          <GoogleOauthButton label="Sign Up" />
 
           {/* DIVIDER */}
           <div className="relative flex items-center justify-center w-full">
