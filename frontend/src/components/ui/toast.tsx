@@ -69,13 +69,13 @@ const Toast = React.forwardRef<
       {/* ICON — IF/ELSE RIGHT HERE */}
       {variant === "success" ? (
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-sm bg-emerald-500/15 my-auto border-emerald-500/30">
-          <div className="h-9 w-9 flex justify-center items-center bg-emerald-500 rounded-full">
+          <div className="h-9 w-9 flex justify-center items-center bg-emerald-500/80 rounded-full">
             <CheckCircle className="h-6 w-6 text-white-100" />
           </div>
         </div>
       ) : variant === "destructive" ? (
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-sm bg-red-500/15 my-auto border-red-500/30">
-          <div className="h-9 w-9 flex justify-center items-center bg-red-500 rounded-full">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-sm bg-red-500/10 my-auto border-red-500/30">
+          <div className="h-8 w-8 flex justify-center items-center bg-red-500/80 rounded-full">
            <XCircle className="h-6 w-6 text-white-100" />
           </div>
         </div>

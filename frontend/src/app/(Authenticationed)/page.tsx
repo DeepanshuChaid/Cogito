@@ -3,10 +3,11 @@
 import { Button } from "@/components/ui/button";
 import API from "@/lib/API";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import Link from "next/link"; 
 import { useAuth } from "@/context/auth.provider";
 import { useQueryClient } from "@tanstack/react-query";
+import {toast} from "@/hooks/use-toast"
+
 
 export default function Home() {
 
@@ -32,7 +33,6 @@ export default function Home() {
      <>
       <p className="cdsc">Error: {JSON.stringify(error)}</p>;
 
-    <Button onClick={() => toast.success("Makima ki chudai")}>Create Event</Button>
 
        <Link href="/profile/Ergo25">Profile</Link>
      </> 
@@ -40,6 +40,11 @@ export default function Home() {
   }
 
   if (!user) {
+    toast({
+      title: "succes",
+      description: JSON.stringify(error),
+      variant: "success"
+    })
     return <p>{JSON.stringify(error)}</p>;
   }
 
@@ -49,7 +54,7 @@ export default function Home() {
 
       <Button onClick={logout}>Logout</Button>
 
-      <Button onClick={() => toast.success("Makima ki chudai")}>Create Event</Button>
+      <Button >Create Event</Button>
 
       <Link href="/profile/Ergo25">Profile</Link>
     </>

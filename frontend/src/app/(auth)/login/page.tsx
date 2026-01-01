@@ -93,14 +93,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center h-full">
-      <div className="flex w-full flex-col gap-[40px]">
+    <div className="flex flex-col items-center justify-center gap-6 h-svh p-6 md:p-10">
+      <div className="flex w-full flex-col gap-[40px] justify-center items-center">
         <Link href="/" className="flex item-center self-center">
           <Image src="/Logo.png" alt="logo" height={40} width={104} className="h-[40px] w-auto"
           />
         </Link>
 
-        <div className="Card max-w-[536px] m-auto">
+        <div className="Card max-w-[536px]">
           <div className="flex flex-col justify-center items-center gap-[4px]">
             <h3 className="text-24 font-semibold text-white-200">Welcome back</h3>
             <p className="text-16 text-white-400 font-medium">Login to your account to continue</p>
@@ -181,10 +181,21 @@ export default function LoginPage() {
               {isSubmitting ? "Logging in..." : "Login"}
             </button>
           </form>
+
+          <div className="text-center text-sm  text-16 text-white-700">
+            Already have an account?{" "}
+            <Link href="/" className="underline font-semibold underline-offset-4">
+              Sign in
+            </Link>
+          </div>
           
             
         </div>
         
+      </div>
+      <div className="text-12 text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary  ">
+        By clicking continue, you agree to our{" "}
+        <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
       </div>
     </div>
   );
