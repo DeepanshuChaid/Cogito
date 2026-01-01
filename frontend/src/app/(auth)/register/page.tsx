@@ -77,6 +77,8 @@ export default function SignUpPage() {
   });
 
   const onSubmit = async (data: FormValues) => {
+
+    if (!isPending) return
     try {
       const response = await API.post("/user/register", data);
       toast.success("Registration successful!");
