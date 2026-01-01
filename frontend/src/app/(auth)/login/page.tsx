@@ -9,26 +9,8 @@ import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { Loader } from "lucide-react";
 import "./login.css"
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import API from "@/lib/API";
 import { toast } from "@/hooks/use-toast";
-import { useEffect } from "react";
 import GoogleOauthButton from "@/components/auth/GoogleLogo";
 
 const formSchema = z.object({
@@ -76,15 +58,6 @@ export default function LoginPage() {
     },
   });
 
-  // useEffect(() => {
-
-  //   toast({
-  //     title: "Error",
-  //     description: "error.message",
-  //     variant: "success",
-  //   });
-  // })
-
   const onSubmit = (data: FormValues) => {
     if (isPending) return;
 
@@ -99,7 +72,7 @@ export default function LoginPage() {
           />
         </Link>
 
-        <div className="Card max-w-[536px]">
+        <div className="flex flex-col justify-center items-center p-6 gap-8 w-full bg-[#141414] rounded-[12px] shadow-[0_0_1px_1px_rgba(255,255,255,0.13),0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] max-w-[536px]">
           <div className="flex flex-col justify-center items-center gap-[4px]">
             <h3 className="font-semibold text-white-200 max-[900px]:text-24 text-20">Welcome back</h3>
             <p className="max-[900px]:text-16 text-14 text-white-400 font-medium">Login to your account to continue</p>
@@ -174,10 +147,11 @@ export default function LoginPage() {
             {/* Login Button */}
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isPending}
               className="flex justify-center items-center py-[12px] w-full bg-[#CCCCCC] border border-[rgba(0,0,0,0.1)] rounded-[12px] shadow-[0px_8px_5px_#000000,inset_0px_12px_14px_rgba(255,255,255,0.87)] font-medium text-[20px] leading-[165%] text-[#080808] hover:bg-gray-300 transition sm:text-16"
             >
-              {isSubmitting ? "Logging in..." : "Login"}
+              {isPending && <Loader className="animate-spin mr-2" />}
+              {isPending ? "Logging in..." : "Login"}
             </button>
           </form>
 
