@@ -122,3 +122,4 @@ src/
 │   └── index.ts
 │
 └── middleware.ts                # Auth protection (optional)
+```
