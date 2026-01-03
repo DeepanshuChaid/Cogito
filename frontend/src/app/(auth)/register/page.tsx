@@ -84,7 +84,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center gap-6 min-h-svh px-2 py-12 md:p-2">
+    <div className="flex flex-col justify-center items-center gap-6 min-h-svh px-2 py-12">
        <div className="flex w-full flex-col gap-[32px] justify-center items-center">
          {/* LOGO */}
          <Link href="/" className="flex item-center self-center">
@@ -242,7 +242,7 @@ export default function SignUpPage() {
              <button
                type="submit"
                disabled={isPending}
-               className="flex justify-center items-center py-[12px] w-full bg-[#CCCCCC] border border-[rgba(0,0,0,0.1)] rounded-[12px] shadow-[0px_8px_5px_#000000,inset_0px_12px_14px_rgba(255,255,255,0.87)] font-medium text-[20px] leading-[165%] text-[#080808] hover:bg-gray-300 transition sm:text-16"
+               className="flex justify-center items-center py-[12px] w-full bg-[#CCCCCC] border border-[rgba(0,0,0,0.1)] rounded-[12px] shadow-[0px_8px_5px_#000000,inset_0px_12px_14px_rgba(255,255,255,0.87)] text-[20px] leading-[165%] text-[#080808] hover:bg-gray-300 transition sm:text-16"
              >
                {isPending && <Loader className="animate-spin mr-2" />}
                {isPending ? "Registering..." : "Register"}

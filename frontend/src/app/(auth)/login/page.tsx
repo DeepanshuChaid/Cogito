@@ -71,7 +71,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center gap-6 min-h-svh px-2 py-12 md:p-2">
+    <div className="flex flex-col justify-center items-center gap-6 min-h-svh px-2 py-12">
       <div className="flex w-full flex-col gap-[32px] justify-center items-center">
         <Link href="/" className="flex item-center self-center">
           <Image src="/Logo.png" alt="logo" height={40} width={104} className="h-[40px] w-auto"
@@ -137,24 +137,26 @@ export default function LoginPage() {
                 Password
               </label>
 
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                {...register("password")}
-                placeholder="Enter your Password"
-                className={`py-[16px] w-full px-4 pr-12 bg-[#1A1A1A] border ${
-                  errors.password ? "border-red-500" : "border-[rgba(255,255,255,0.05)]"
-                } rounded-[12px] shadow-[inset_0px_8px_18px_rgba(0,0,0,0.18)] text-[14px] font-normal leading-[150%] text-[#F2F2F2] placeholder-[#F2F2F2] focus:outline-none  focus:border-white-300 focus:ring-2 focus:ring-white-200/40`}
-              />
+              {/* INPUT WRAPPER */}
+               <div className="relative">
+                 <input
+                   id="password"
+                   type={showPassword ? "text" : "password"}
+                   {...register("password")}
+                   placeholder="Enter your Password"
+                   className={`py-[16px] w-full px-4 pr-12 bg-[#1A1A1A] border ${
+                     errors.password ? "border-red-500" : "border-[rgba(255,255,255,0.05)]"
+                   } rounded-[12px] shadow-[inset_0px_8px_18px_rgba(0,0,0,0.18)] text-[14px] font-normal leading-[150%] text-[#F2F2F2] placeholder-[#F2F2F2] focus:outline-none  focus:border-white-300 focus:ring-2 focus:ring-white-200/40`}
+                 />
 
-              {/* Eye button */}
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-4 flex items-center text-[#BFBFBF] hover:text-white"
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
+                 <button
+                   type="button"
+                   onClick={() => setShowPassword(!showPassword)}
+                   className="absolute right-4 top-1/2 -translate-y-1/2 text-[#BFBFBF] hover:text-white"
+                 >
+                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                 </button>
+               </div>
 
               {errors.password && (
                 <p className="text-red-500 text-[14px]">{errors.password.message}</p>
@@ -173,7 +175,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isPending}
-              className="flex justify-center items-center py-[12px] w-full bg-[#CCCCCC] border border-[rgba(0,0,0,0.1)] rounded-[12px] shadow-[0px_8px_5px_#000000,inset_0px_12px_14px_rgba(255,255,255,0.87)] font-medium text-[20px] leading-[165%] text-[#080808] hover:bg-gray-300 transition sm:text-16"
+              className="flex justify-center items-center py-[12px] w-full bg-[#CCCCCC] border border-[rgba(0,0,0,0.1)] rounded-[12px] shadow-[0px_8px_5px_#000000,inset_0px_12px_14px_rgba(255,255,255,0.87)] font-regular text-[20px] leading-[165%] text-[#080808] hover:bg-gray-300 transition sm:text-16"
             >
               {isPending && <Loader className="animate-spin mr-2" />}
               {isPending ? "Logging in..." : "Login"}

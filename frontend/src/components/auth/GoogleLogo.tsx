@@ -1,4 +1,5 @@
 import { Button } from "../ui/button";
+import Image from "next/image";
 
 const GoogleOauthButton = (props: { label: string }) => {
   const { label } = props;
@@ -13,30 +14,15 @@ const GoogleOauthButton = (props: { label: string }) => {
       onClick={handleClick}
       variant="outline"
       type="button"
-      className="w-full font-medium flex items-center justify-center gap-3 px-3 py-3 h-[55px]
+      className="w-full flex items-center justify-center gap-3 px-3 py-[25px] h-[56px]
                  bg-[#1A1A1A] border border-white/10 rounded-lg
                  shadow-[0_4px_4px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(235,235,235,0.12)]
                  !text-white text-[16px]
                  hover:bg-black-50 hover:shadow-[0_6px_6px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(235,235,235,0.12)]
-                 active:bg-[#111111] active:shadow-[0_2px_2px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(235,235,235,0.12)]
+                 active:bg-grey-800 active:shadow-[0_2px_2px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(235,235,235,0.12)]
                  transition-all duration-150 ease-in-out"
     >
-  
-      <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <g clip-path="url(#clip0_31_320)">
-      <path d="M24.1732 9.6498H23.2143V9.6H12.5V14.4H19.228C18.2464 17.1942 15.6089 19.2 12.5 19.2C8.55533 19.2 5.35712 15.9762 5.35712 12C5.35712 8.0238 8.55533 4.8 12.5 4.8C14.3208 4.8 15.9774 5.4924 17.2387 6.6234L20.6059 3.2292C18.4797 1.2318 15.6357 0 12.5 0C5.92557 0 0.595215 5.373 0.595215 12C0.595215 18.627 5.92557 24 12.5 24C19.0744 24 24.4047 18.627 24.4047 12C24.4047 11.1954 24.3226 10.41 24.1732 9.6498Z" fill="#FFC107"/>
-      <path d="M1.9679 6.4146L5.8792 9.306C6.93754 6.6648 9.50063 4.8 12.5 4.8C14.3209 4.8 15.9774 5.4924 17.2387 6.6234L20.606 3.2292C18.4798 1.2318 15.6358 0 12.5 0C7.92742 0 3.96194 2.6022 1.9679 6.4146Z" fill="#FF3D00"/>
-      <path d="M12.4999 24.0002C15.5749 24.0002 18.369 22.814 20.4815 20.885L16.797 17.7422C15.5618 18.6896 14.0521 19.2019 12.4999 19.2002C9.40352 19.2002 6.77435 17.21 5.78388 14.4326L1.90173 17.4476C3.87197 21.3338 7.87316 24.0002 12.4999 24.0002Z" fill="#4CAF50"/>
-      <path d="M24.1732 9.6499H23.2143V9.6001H12.5V14.4001H19.228C18.7585 15.7299 17.9127 16.892 16.7952 17.7427L16.797 17.7415L20.4815 20.8843C20.2208 21.1231 24.4048 18.0001 24.4048 12.0001C24.4048 11.1955 24.3226 10.4101 24.1732 9.6499Z" fill="#1976D2"/>
-      </g>
-      <defs>
-      <clipPath id="clip0_31_320">
-      <rect width="25" height="24" fill="white"/>
-      </clipPath>
-      </defs>
-      </svg>
-
-
+      <Image src="./google.svg" height={25} width={20} alt="GOOGLE_LOGO" />
       {label} with Google
     </Button>
   );
