@@ -41,8 +41,7 @@ import {
 import NavItem from "./NavItem";
 
 const Asidebar = () => {
-  const { open } = useSidebar();
-  
+  const { open } = useSidebar()
   const { isPending, user } = useAuth()
 
   const [isOpen, setIsOpen] = useState(false);
