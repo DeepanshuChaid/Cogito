@@ -49,7 +49,7 @@ const Asidebar = () => {
   return (
     <>
       <Sidebar className="flex bg-black-100 py-4 px-6 border-none">
-        <SidebarHeader className="p-0" asChild>
+        <SidebarHeader className="p-0">
           <Link href="/"  className="flex justify-start flex-row items-center p-0 gap-[6px]">
             <Image src="./Logo-notext.svg" alt="logo" height={20} width={20} className="h-[24px] w-auto" />
             <p className="text-16 text-white-200"><span className="text-20">C</span>ogito</p>
