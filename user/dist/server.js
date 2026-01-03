@@ -32,12 +32,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
-    origin: process.env.FRONTEND_URL,
+    origin: true,
     credentials: true,
 }));
 if (!process.env.SESSION_SECRET) {
     throw new Error("SESSION_SECRET is missing");
 }
+app.set('trust proxy', 1);
 app.use(session({
     name: "session",
     secret: process.env.SESSION_SECRET,

@@ -36,7 +36,7 @@ export const loginUserController = asyncHandler(
     }
 
     if (!user.password) {
-      throw new AppError("User has no password", 400);
+      throw new AppError("User has no password. please login with Google", 400);
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);

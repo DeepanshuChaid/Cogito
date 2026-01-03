@@ -19,6 +19,7 @@ const formSchema = z
   name: z
     .string()
     .min(1, "Name is required")
+    .max(18, "Name must be less than 18 characters")
     .trim()
     .refine((val) => !val.includes(" "), {
       message: "Organization name cannot contain spaces",

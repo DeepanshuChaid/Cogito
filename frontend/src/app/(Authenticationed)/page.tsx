@@ -49,14 +49,14 @@ export default function Home() {
   }
 
   return (
-    <>
-      <p>{JSON.stringify(user, null, 2)}</p>
+    <div>
+      {/* <p>{JSON.stringify(user, null, 2)}</p> */}
 
       <Button onClick={logout}>Logout</Button>
 
       <Button >Create Event</Button>
 
       <Link href="/profile/Ergo25">Profile</Link>
-    </>
+    </div>
   );
 }
