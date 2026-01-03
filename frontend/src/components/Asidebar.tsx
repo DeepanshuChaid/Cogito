@@ -32,7 +32,6 @@ import {
   Home,
   Inbox,
   Search,
-  Settings,
   EllipsisIcon,
   Loader,
   LogOut,
