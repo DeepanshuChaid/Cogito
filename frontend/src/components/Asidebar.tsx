@@ -74,7 +74,7 @@ const Asidebar = () => {
   return (
     <>
       <Sidebar className="flex bg-black-100 py-4 px-6 gap-6 border-none">
-        <SidebarContent>
+        <SidebarContent className="bg-none ">
         </SidebarContent>
       </Sidebar>
     </>
