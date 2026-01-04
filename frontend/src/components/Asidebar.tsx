@@ -41,6 +41,7 @@ import NavItem from "./NavItem";
 
 const Asidebar = () => {
   const { open } = useSidebar()
+  
   const { isPending, user } = useAuth()
 
   const [isOpen, setIsOpen] = useState(false);
@@ -61,7 +62,7 @@ const Asidebar = () => {
             <SidebarGroupContent className="p-0">
               <NavItem href="/blog">
                 {(isActive) => (
-                  <div>
+                  <div className="">
                     
                   </div>
                 )}
