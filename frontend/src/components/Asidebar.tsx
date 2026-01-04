@@ -43,7 +43,6 @@ const Asidebar = () => {
   const { open } = useSidebar()
   
   const { isPending, user } = useAuth()
-
   
   const [isOpen, setIsOpen] = useState(false);
 
