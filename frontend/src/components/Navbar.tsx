@@ -7,15 +7,14 @@ export default function Navbar () {
         </svg>
       </div>
 
-      <div
-        class="mx-auto flex h-10 w-[420px] max-w-[420px] items-center gap-2.5
-               px-5 bg-[#1A1A1A] border border-white/10
-               rounded-full
-               shadow-md"
-      >
-        
-        <p className="text-14 text-white-400">Search....</p>
-      </div>
+      <input
+         id="email"
+         type="email"
+         placeholder="Search..."
+         className={`py-[12px] mx-auto flex w-[420px] max-w-[420px] items-center gap-2.5
+                px-5 py-2 bg-[linear-gradient(6.02deg,_#0F0F0F_-27.3%,_#1F1F1F_198.01%)] border border-white/10
+                rounded-full w-full px-4 bg-[#1A1A1A] border shadow-[0_0_6px_2px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(255,255,255,0.05)] text-14 text-[#F2F2F2] placeholder-white-400 focus:outline-none focus:border-white-300 focus:ring-1 focus:ring-white-200/20`}
+       />
 
       Navbar
     </div>
