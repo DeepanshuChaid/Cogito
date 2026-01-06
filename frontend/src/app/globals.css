@@ -152,7 +152,7 @@
     @apply border-border outline-ring/50;
   } 
   body {
-    @apply text-white-400 bg-[#0A0A0A] overflow-x-hidden;
+    @apply text-white-400 overflow-x-hidden;
   }
   button {
     cursor: pointer;

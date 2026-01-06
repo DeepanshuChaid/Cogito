@@ -12,7 +12,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <>
       <AuthProvider>
         <SidebarProvider>
-          <div className="flex min-h-screen w-full">
+          <div className="flex min-h-screen w-full bg-[#0D0D0D]">
             <Asidebar />
 
             <div className="flex w-full flex-col min-h-0">
