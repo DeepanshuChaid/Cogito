@@ -11,33 +11,10 @@ export default function Navbar () {
         class="mx-auto flex h-10 w-[420px] max-w-[420px] items-center gap-2.5
                px-5 bg-[#1A1A1A] border border-white/10
                rounded-full
-               shadow-[0_0_4px_2px_rgba(0,0,0,0.2),inset_0_1px_4px_rgba(255,255,255,0.15)]"
+               shadow-md"
       >
         
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#CCCCCC"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="lucide lucide-search shrink-0"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-
-          
-        <span
-          class="text-sm font-medium leading-[21px] tracking-[0.01em]
-                 text-[#CCCCCC] select-none"
-          style="font-family: Manrope"
-        >
-          Search
-        </span>
+        <p className="text-14 text-white-400">Search....</p>
       </div>
 
       Navbar
