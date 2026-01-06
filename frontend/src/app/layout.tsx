@@ -21,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${manrope.variable} font-sans antialiased bg-black-200 text-white-400 overflow-x-hidden`}>
+      <body className={`${manrope.variable} font-sans antialiased bg-[#0A0A0A] text-white-400 overflow-x-hidden w-full h-full`}>
         <Providers>
           <Toaster />
           {children}
