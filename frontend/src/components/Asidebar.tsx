@@ -65,10 +65,10 @@ const Asidebar = () => {
     <>
       <Sidebar
         collapsible="icon"
-        className="bg-[#0D0D0D] border-none"
+        className="bg-[#0D0D0D] py-4 px-6 border-none"
       >
-        <SidebarHeader className="p-0 flex justify-center items-center pt-4">
-          <Link href="/"  className="flex justify-start flex-row items-center p-0 gap-2">
+        <SidebarHeader className="p-0 ">
+          <Link href="/"  className="flex flex-row items-center p-0 gap-2">
             <Image src="./Logo-notext.svg" alt="logo" height={24} width={20} />
             <p className="text-16 text-white-200 group-data-[collapsible=icon]:hidden"><span className="text-20">C</span>ogito</p>
           </Link>
