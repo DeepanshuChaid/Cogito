@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 
 export default function Navbar () {
+
+  const { toggleSidebar } = useSidebar()
+  
   return (
     <div className="flex justify-between items-center py-3 px-6 bg-[#0D0D0D] rounded-[2px]">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      
+        <svg onClick={toggleSidebar} className="hover:bg-black-50" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M7 1V19M3 1H17C18.1046 1 19 1.89543 19 3V17C19 18.1046 18.1046 19 17 19H3C1.89543 19 1 18.1046 1 17V3C1 1.89543 1.89543 1 3 1Z" stroke="#CCCCCC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-
-      <SidebarTrigger />
 
       <div className="flex flex-row w-full max-w-[420px] justify-center items-center">
         <svg className="mr-[-64px] z-10" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
