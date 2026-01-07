@@ -12,21 +12,6 @@ export default function Home() {
   const queryClient = useQueryClient();
   const { user, isPending, error } = useAuth();
 
-  const logout = async () => {
-    try {
-      await API.post("/user/logout");
-      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-      window.location.reload();
-    } catch (err) {
-      console.error("Logout failed:", err);
-      toast({
-        title: "Logout failed",
-        description: "Something went wrong while logging out.",
-        variant: "destructive",
-      });
-    }
-  };
-
   // ✅ side-effects belong here, NOT in render
   useEffect(() => {
     if (!user && error) {
@@ -67,7 +52,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col w-full h-full gap-4">
-      <Button onClick={logout}>Logout</Button>
 
       <Button>Create Event</Button>
 

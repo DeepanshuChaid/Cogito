@@ -12,16 +12,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <>
       <AuthProvider>
         <SidebarProvider>
-          <div className="flex min-h-screen w-full bg-[#0D0D0D]">
+          <div className="flex h-full w-full bg-[#0D0D0D]">
             <Asidebar />
 
-            <div className="flex w-full flex-col min-h-0">
+            <div className="flex min-h-screen w-full flex-col min-h-0">
               <Navbar />
 
               <div className="flex flex-col w-full flex-1 min-h-0 px-2 pb-2">
                 <div className="box-border flex flex-row items-start flex-1 p-6 gap-4
                                 bg-[#0A0A0A] border border-white/15 rounded-[24px]
-                                w-full overflow-auto min-w-0">
+                                w-full overflow-hidden min-w-0">
                   {children}
                 </div>
               </div>
@@ -32,3 +32,4 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     </>
   )
 }
+

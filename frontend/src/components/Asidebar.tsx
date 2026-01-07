@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link"
 import Image from "next/image";
 import {
@@ -33,12 +33,33 @@ import {
   LogOut,
 } from "lucide-react";
 import NavItem from "./NavItem";
+import { toast } from "@/hooks/use-toast"
+import API from "@/lib/API"
+import {QueryClient} from "@tanstack/react-query"
+
 
 const Asidebar = () => {
   const { open } = useSidebar()
 
   const { isPending, user } = useAuth()
   const [isOpen, setIsOpen] = useState(false);
+
+  const queryClient = new QueryClient()
+
+  const logout = async () => {
+    try {
+      await API.post("/user/logout");
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      window.location.reload();
+    } catch (err) {
+      console.error("Logout failed:", err);
+      toast({
+        title: "Logout failed",
+        description: "Something went wrong while logging out.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <>
@@ -110,7 +131,7 @@ const Asidebar = () => {
                 )}
               </NavItem>
               
-              <NavItem href={`/profile/${user?.name && "GOD"}`}>
+              <NavItem href={`/profile/${user?.name || "Deepanshu"}`}>
                 {(isActive) => (
               <div
               className={`flex items-center px-3 py-2 gap-3 rounded-xl transition-colors hover:bg-black-50 ${
@@ -221,7 +242,10 @@ const Asidebar = () => {
 
                 <DropdownMenuItem
                   className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-black-500 hover:text-white-100 text-white-200 transition-colors cursor-pointer active:bg-black-50 active:text-white-50"
-                  onClick={() => setIsOpen(true)}
+                  onClick={() => {
+                    setIsOpen(true)
+                    logout()
+                  }}
                 >
                   <LogOut className="w-4 h-4 text-white-200" />
                   Log out

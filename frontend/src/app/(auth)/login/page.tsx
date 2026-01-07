@@ -59,8 +59,8 @@ export default function LoginPage() {
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: process.env.NODE_ENV==="development" ? "cogito2509@gmail.com" : "",
+      password: process.env.NODE_ENV==="development" ? "Cogito25" : "",
     },
   });
 
