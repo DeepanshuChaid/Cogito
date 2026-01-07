@@ -63,7 +63,7 @@ const Asidebar = () => {
 
   return (
     <>
-      <Sidebar className="flex bg-[#0D0D0D] py-4 px-6 border-none">
+      <Sidebar className="flex bg-[#0D0D0D] py-4 border-none" collapsible="icon">
         <SidebarHeader className="p-0">
           <Link href="/"  className="flex justify-start flex-row items-center p-0 gap-2">
             <Image src="./Logo-notext.svg" alt="logo" height={24} width={20} />
@@ -195,9 +195,7 @@ const Asidebar = () => {
           </SidebarGroup>
         </SidebarContent>
         
-        <SidebarFooter className="flex flex-row items-center px-3 py-2 gap-2 bg-black-100 rounded-xl shadow-[0_4px_4px_rgba(0,0,0,0.25),inset_0_1px_2px_rgba(235,235,235,0.11)] data-[state=open]:bg-black-200 hover:bg-black-50 p-0 border-none ring-0 outline-none focus-visible:ring-0
-          
-          ">
+        <SidebarFooter className="flex mt-4 flex-row items-center px-3 py-2 gap-2 bg-black-100 rounded-xl shadow-[0_4px_4px_rgba(0,0,0,0.25),inset_0_1px_2px_rgba(235,235,235,0.11)] data-[state=open]:bg-black-200 hover:bg-black-50 p-0 border-none ring-0 outline-none focus-visible:ring-0">
           {isPending ? (
             <Loader size="24px" className="animate-spin place-self-center self-center" />
           ) : (
