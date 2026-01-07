@@ -63,11 +63,14 @@ const Asidebar = () => {
 
   return (
     <>
-      <Sidebar className="flex bg-[#0D0D0D] py-4 border-none" collapsible="icon">
-        <SidebarHeader className="p-0">
+      <Sidebar
+        collapsible="icon"
+        className="bg-[#0D0D0D] border-none"
+      >
+        <SidebarHeader className="p-0 flex justify-center items-center pt-4">
           <Link href="/"  className="flex justify-start flex-row items-center p-0 gap-2">
             <Image src="./Logo-notext.svg" alt="logo" height={24} width={20} />
-            <p className="text-16 text-white-200"><span className="text-20">C</span>ogito</p>
+            <p className="text-16 text-white-200 group-data-[collapsible=icon]:hidden"><span className="text-20">C</span>ogito</p>
           </Link>
         </SidebarHeader>
         <hr className="bg-black-50 border-black-50 rounded-[4px] my-6 border-1" />
@@ -92,7 +95,7 @@ const Asidebar = () => {
 
 }
         <p
-          className={`text-16 transition-colors ${
+          className={`text-16 transition-colors group-data-[collapsible=icon]:hidden ${
             isActive ? "text-white-100" : "text-white-400 hover:text-white-300"
           }`}
         >
@@ -121,7 +124,7 @@ const Asidebar = () => {
 
               }
               <p
-              className={`text-16 transition-colors ${
+              className={`text-16 transition-colors group-data-[collapsible=icon]:hidden ${
               isActive ? "text-white-100" : "text-white-400 hover:text-white-300"
               }`}
               >
@@ -149,7 +152,7 @@ const Asidebar = () => {
                   </svg>
               }
               <p
-              className={`text-16 transition-colors ${
+              className={`text-16 transition-colors group-data-[collapsible=icon]:hidden ${
               isActive ? "text-white-100" : "text-white-400 hover:text-white-300"
               }`}
               >
@@ -181,7 +184,7 @@ const Asidebar = () => {
                   </svg>
               }
               <p
-              className={`text-16 transition-colors ${
+              className={`text-16 transition-colors group-data-[collapsible=icon]:hidden ${
               isActive ? "text-white-100" : "text-white-400 hover:text-white-300"
               }`}
               >
@@ -252,6 +255,8 @@ const Asidebar = () => {
             </DropdownMenu>
           )}
         </SidebarFooter>
+
+        <SidebarRail />
       </Sidebar>
     </>
   );
