@@ -9,7 +9,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <>
       <AuthProvider>
-        <SidebarProvider>
+        <SidebarProvider style={{
+            "--sidebar-width": "240px",      // Expanded width
+            "--sidebar-width-icon": "64px",  // Your custom "thin" width
+          } as React.CSSProperties} >
           <div className="flex h-full w-full bg-[#0D0D0D]">
             <Asidebar />
 
