@@ -10,37 +10,32 @@ export default function Navbar() {
   const { user } = useAuth();
 
   return (
-    <div className="flex justify-between items-center py-2 px-3 md:px-6 bg-[#0D0D0D] border-b border-white/5 gap-2 md:gap-4">
+    <div className="flex justify-between items-center py-2 px-3 md:py-3 md:px-6 bg-[#0D0D0D] rounded-[2px] gap-2 md:gap-4">
 
       {/* Sidebar Toggle */}
       <button 
         onClick={toggleSidebar} 
-        className="flex-shrink-0 p-1.5 hover:bg-white/5 rounded-md transition-colors"
-        aria-label="Toggle Sidebar"
+        className="flex-shrink-0 p-1 hover:bg-white/5 transition-colors"
       >
-        <svg 
-          className="text-[#CCCCCC]" 
-          width="18" height="18" 
-          viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M7 1V19M3 1H17C18.1046 1 19 1.89543 19 3V17C19 18.1046 18.1046 19 17 19H3C1.89543 19 1 18.1046 1 17V3C1 1.89543 1.89543 1 3 1Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M7 1V19M3 1H17C18.1046 1 19 1.89543 19 3V17C19 18.1046 18.1046 19 17 19H3C1.89543 19 1 18.1046 1 17V3C1 1.89543 1.89543 1 3 1Z" stroke="#CCCCCC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </button>
 
-      {/* Search Bar - Grows to fill space, but has a max width */}
-      <div className="flex flex-grow max-w-[420px] sm:max-w-[10px] items-center relative group">
+      {/* Search Bar - Height Fixed to h-9/h-11 */}
+      <div className="flex flex-grow justify-center items-center relative max-w-[420px]">
         <svg 
-          className="absolute left-3 z-10 text-white-400/50 group-focus-within:text-white-300 transition-colors" 
-          width="14" height="14" 
+          className="absolute left-3 md:left-4 z-10" 
+          width="16" height="16" 
           viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M17 17L13.1422 13.1422M15.2222 8.11111C15.2222 12.0385 12.0385 15.2222 8.11111 15.2222C4.18375 15.2222 1 12.0385 1 8.11111C1 4.18375 4.18375 1 8.11111 1C12.0385 1 15.2222 4.18375 15.2222 8.11111Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M17 17L13.1422 13.1422M15.2222 8.11111C15.2222 12.0385 12.0385 15.2222 8.11111 15.2222C4.18375 15.2222 1 12.0385 1 8.11111C1 4.18375 4.18375 1 8.11111 1C12.0385 1 15.2222 4.18375 15.2222 8.11111Z" stroke="#CCCCCC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
         <input
           id="search"
           type="text"
           placeholder="Search..."
-          className="w-full pl-9 min-h-8 pr-3 py-1.5 bg-[#1A1A1A] border border-white/10 rounded-full text-[12px] text-[#F2F2F2] placeholder-white-400/40 focus:outline-none focus:border-white/20 focus:ring-1 focus:ring-white/10 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)]"
+          className="w-full h-9 md:h-11 pl-10 md:pl-12 pr-4 bg-[linear-gradient(6.02deg,_#0F0F0F_-27.3%,_#1F1F1F_198.01%)] border border-white/10 rounded-full bg-[#1A1A1A] shadow-[0_0_6px_2px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(255,255,255,0.05)] text-12 md:text-14 text-[#F2F2F2] placeholder-white-400 focus:outline-none focus:border-white-300 focus:ring-1 focus:ring-white-200/20 transition-all"
         />
       </div>
 
@@ -48,21 +43,28 @@ export default function Navbar() {
       <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
         <Link href="/write">
           <button
-            className="flex items-center justify-center p-2 md:px-4 md:py-1.5 gap-2 bg-[#191919] border border-white/10 rounded-full text-[12px] font-medium text-white-300 hover:bg-[#222] hover:border-white/20 transition-all active:scale-95"
+            className="flex items-center justify-center h-9 md:h-11 px-4 md:px-6 gap-2 md:gap-3 bg-[#191919] border border-white/10 rounded-full shadow-[0_4px_4px_rgba(0,0,0,0.27),inset_0_1px_4px_-2px_rgba(235,235,235,0.12)] text-12 md:text-16 text-white-300 hover:bg-grey-800 transition-colors duration-100 ease-out"
           >
-            <svg width="16" height="16" viewBox="0 0 21 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M10.0017 2.04896H3.00039C2.46985 2.04896 1.96105 2.27081 1.5859 2.6657C1.21075 3.06059 1 3.59617 1 4.15463V18.8943C1 19.4528 1.21075 19.9884 1.5859 20.3833C1.96105 20.7782 2.46985 21 3.00039 21H17.0031C17.5336 21 18.0424 20.7782 18.4176 20.3833C18.7927 19.9884 19.0035 19.4528 19.0035 18.8943V11.5245M16.378 1.65415C16.7759 1.2353 17.3156 1 17.8783 1C18.441 1 18.9807 1.2353 19.3786 1.65415C19.7765 2.07299 20 2.64107 20 3.2334C20 3.82574 19.7765 4.39381 19.3786 4.81265L10.3638 14.3029C10.1263 14.5527 9.83292 14.7355 9.51065 14.8346L6.63709 15.719C6.55103 15.7454 6.4598 15.747 6.37295 15.7236C6.2861 15.7001 6.20684 15.6526 6.14344 15.5859C6.08005 15.5191 6.03486 15.4357 6.01261 15.3443C5.99036 15.2528 5.99187 15.1568 6.01697 15.0662L6.85713 12.0414C6.95168 11.7025 7.12572 11.394 7.36323 11.1444L16.378 1.65415Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 21 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.0017 2.04896H3.00039C2.46985 2.04896 1.96105 2.27081 1.5859 2.6657C1.21075 3.06059 1 3.59617 1 4.15463V18.8943C1 19.4528 1.21075 19.9884 1.5859 20.3833C1.96105 20.7782 2.46985 21 3.00039 21H17.0031C17.5336 21 18.0424 20.7782 18.4176 20.3833C18.7927 19.9884 19.0035 19.4528 19.0035 18.8943V11.5245M16.378 1.65415C16.7759 1.2353 17.3156 1 17.8783 1C18.441 1 18.9807 1.2353 19.3786 1.65415C19.7765 2.07299 20 2.64107 20 3.2334C20 3.82574 19.7765 4.39381 19.3786 4.81265L10.3638 14.3029C10.1263 14.5527 9.83292 14.7355 9.51065 14.8346L6.63709 15.719C6.55103 15.7454 6.4598 15.747 6.37295 15.7236C6.2861 15.7001 6.20684 15.6526 6.14344 15.5859C6.08005 15.5191 6.03486 15.4357 6.01261 15.3443C5.99036 15.2528 5.99187 15.1568 6.01697 15.0662L6.85713 12.0414C6.95168 11.7025 7.12572 11.394 7.36323 11.1444L16.378 1.65415Z" stroke="#D9D9D9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span className="hidden sm:block">Write</span>
+            <span className="hidden md:block">Write</span>
           </button>
         </Link>
 
-        <Avatar className="h-8 w-8 min-h-8 md:h-8 md:w-8 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/10">
-          <AvatarImage src={user?.profilePicture || ""} className="object-cover w-full h-full" />
-          <AvatarFallback className="flex items-center justify-center w-full h-full bg-[#222] text-[10px] text-white/70 uppercase">
-            {user?.name?.[0] || "C"}
-          </AvatarFallback>
-        </Avatar>
+        {/* Avatar - Height Matched (36px/44px) */}
+        <Link href={`/profile/${user?.name || "Cogito25"}`} className="block">
+          <Avatar className="relative flex h-9 w-9 md:h-11 md:w-11 shrink-0 overflow-hidden rounded-full ring-1 ring-white/10 transition-transform active:scale-95">
+            <AvatarImage 
+              src={user?.profilePicture || ""} 
+              className="aspect-square h-full w-full object-cover" 
+            />
+            <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-[#222] text-14 text-white/70 uppercase">
+              {user?.name?.[0] || "C"}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
+
       </div>
     </div>
   );
