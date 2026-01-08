@@ -53,7 +53,7 @@ export default function Navbar() {
         </Link>
 
         {/* Avatar - Height Matched (36px/44px) */}
-        <Link href={`/profile/${user?.name || "Cogito25"}`} className="block">
+        <Link href={`/profile/${user?.name || "Cogito25"}`} className="block md:hidden">
           <Avatar className="relative flex h-9 w-9 md:h-11 md:w-11 shrink-0 overflow-hidden rounded-full ring-1 ring-white/10 transition-transform active:scale-95">
             <AvatarImage 
               src={user?.profilePicture || ""} 
