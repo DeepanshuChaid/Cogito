@@ -68,7 +68,7 @@ const Asidebar = () => {
         className="bg-[#0D0D0D] border-none"
       >
         <div className="flex h-full flex-col px-6 py-4 group-data-[collapsible=icon]:px-2">
-          <SidebarHeader className="p-0 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:items-center border-red-300">
+          <SidebarHeader className="p-0 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:items-center border-red-300" onClick={toggleSidebar}>
             <Link href="/"  className="flex flex-row items-center p-0 gap-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:pt-2">
               <Image src="./Logo-notext.svg" alt="logo" height={24} width={20} />
               <p className="text-16 text-white-200 group-data-[collapsible=icon]:hidden"><span className="text-20">C</span>ogito</p>
@@ -81,7 +81,7 @@ const Asidebar = () => {
               <SidebarGroupContent className="p-0 gap-[12px] flex flex-col">
                 <NavItem href="/">
                   {(isActive) => (
-         <div
+         <div onClick={toggleSidebar}
           className={`flex group-data-[collapsible=icon]:justify-center items-center px-3 py-2 gap-3 rounded-xl transition-colors hover:bg-black-50 ${
             isActive
               ? "bg-[#171717] shadow-[0_2px_5px_1px_rgba(0,0,0,0.23),inset_0_1px_2px_rgba(255,255,255,0.13)]"
@@ -107,7 +107,7 @@ const Asidebar = () => {
                 </NavItem>
                 <NavItem href="/notifications">
                   {(isActive) => (
-                <div
+                <div onClick={toggleSidebar}
                 className={`flex group-data-[collapsible=icon]:justify-center items-center px-3 py-2 gap-3 rounded-xl transition-colors hover:bg-black-50 ${
                 isActive
                 ? "bg-[#171717] shadow-[0_2px_5px_1px_rgba(0,0,0,0.23),inset_0_1px_2px_rgba(255,255,255,0.13)]"
