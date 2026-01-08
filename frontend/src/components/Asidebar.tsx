@@ -137,7 +137,7 @@ const Asidebar = () => {
                 
                 <NavItem href={`/profile/${user?.name || "Deepanshu"}`}>
                   {(isActive) => (
-                <div
+                <div onClick={toggleSidebar}
                 className={`flex group-data-[collapsible=icon]:justify-center items-center px-3 py-2 gap-3 rounded-xl transition-colors hover:bg-black-50 ${
                 isActive
                 ? "bg-[#171717] shadow-[0_2px_5px_1px_rgba(0,0,0,0.23),inset_0_1px_2px_rgba(255,255,255,0.13)]"
