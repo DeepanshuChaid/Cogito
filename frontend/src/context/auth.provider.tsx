@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "../api/auth"; // your fetch function
 import { useRouter } from "next/navigation"
+import FullscreenLoader from "@/components/loader/FullscreenLoader";
 
 type AuthContextType = {
   user: User | null;

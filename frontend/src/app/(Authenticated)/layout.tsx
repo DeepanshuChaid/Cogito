@@ -1,8 +1,10 @@
+
 import { AuthProvider } from "@/context/auth.provider"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import Asidebar from "@/components/Asidebar"
-import { cookies } from "next/headers"
 import Navbar from "@/components/Navbar"
+import FullscreenLoader from "@/components/loader/FullscreenLoader"
+import { useAuth } from "@/context/auth.provider"
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   
