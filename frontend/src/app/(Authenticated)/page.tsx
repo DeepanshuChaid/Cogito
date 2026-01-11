@@ -34,7 +34,7 @@ export default function Home() {
   if (error) {
     return (
       <div className="flex flex-col w-full gap-2">
-        <p>Error: {JSON.stringify(error).slice(0, 800)}</p>
+        <p>Error: {JSON.stringify(error).slice(0, 235)}</p>
         <Link href="/profile/Ergo25" className="underline">
           Profile
         </Link>
@@ -51,7 +51,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col w-full h-full gap-4">
+    <div className="flex flex-col gap-4">
 
       <Button>Create Event</Button>
 
