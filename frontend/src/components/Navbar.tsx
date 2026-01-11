@@ -112,7 +112,7 @@ export default function Navbar() {
           <DropdownMenuContent
             align="end"
             sideOffset={8}
-            className="flex flex-col items-center gap-5 p-4 bg-black-50 border border-white/10 rounded-md shadow-[3px_3px_8px_rgba(0,0,0,0.05)]"
+            className="flex flex-col items-center gap-5 p-4 bg-black-100 border border-white/10 rounded-md shadow-[3px_3px_8px_12px_rgba(0,0,0,0.05)]"
           >
             <div className="flex w-full gap-2 items-center">
               <Avatar className="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full ring-1 ring-white/10 select-none">
