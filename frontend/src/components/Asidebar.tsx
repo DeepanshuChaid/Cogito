@@ -249,23 +249,23 @@ const Asidebar = () => {
               </DropdownMenuTrigger>
 
               <DropdownMenuContent
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-[198px] bg-[#171717] border border-white-50/10 rounded-lg shadow-md p-1"
-                side="bottom"
-                align="start"
-                sideOffset={4}
+                className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[120px] bg-[#171717] border border-white-50/10 rounded-lg shadow-md p-1"
+                side="top" // Changed to top as it's a footer dropdown, usually better UX
+                align="center"
+                sideOffset={12}
               >
-
                 <DropdownMenuItem
-                  className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-black-500 hover:text-white-100 text-white-200 transition-colors cursor-pointer active:bg-black-50 active:text-white-50"
+                  className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-white/5 hover:text-white text-white-200 transition-colors cursor-pointer"
                   onClick={() => {
-                    setIsOpen(true)
-                    logout()
+                    setIsOpen(true);
+                    logout();
                   }}
                 >
                   <LogOut className="w-4 h-4 text-white-200" />
-                  Log out
+                  <span className="text-14">Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
+
             </DropdownMenu>
           )}
         </SidebarFooter>

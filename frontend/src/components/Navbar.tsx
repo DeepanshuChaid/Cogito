@@ -66,7 +66,7 @@ export default function Navbar() {
           "isVisible" ? "translate-y-0" : "-translate-y-full",
 
           // Background & Borders
-          "bg-black-200 border-b border-white/10 px-1", 
+          "bg-black-200 border-b border-white/10 px-1 md:border-none", 
 
           // Original Layout Classes
           "flex justify-between items-center py-4 px-6 md:py-3 md:px-6 gap-2 md:gap-4 rounded-[2px]"
