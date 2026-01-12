@@ -127,7 +127,6 @@ export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
 
 
 
-
 // *************************** //
 // SEARCH BLOGS CONTROLLER (FIXED)
 // *************************** //
