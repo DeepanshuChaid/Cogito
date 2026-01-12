@@ -21,7 +21,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <div className="flex min-h-screen w-full flex-col min-h-0">
               <Navbar />
 
-              <div className="flex flex-col w-full flex-1 min-h-0 px-2 pb-2">
+              <div className="flex flex-col w-full flex-1 min-h-0 p-0 md:px-2 md:pb-2">
                 <div className="box-border flex flex-row items-start flex-1 p-6 gap-4
                  md:bg-black-300 md:border md:border-white/15 rounded-[24px]
                                 w-full overflow-hidden min-w-0">
