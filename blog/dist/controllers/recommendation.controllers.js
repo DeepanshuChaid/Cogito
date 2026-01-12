@@ -1,6 +1,5 @@
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
-import BLOGCATEGORY from "../enum/blogCategory.enum.js";
 import { redisClient } from "../server.js";
 // *************************** //
 // GET RECOMMENDED BLOGS CONTROLLER (IMPROVED)
@@ -112,55 +111,31 @@ export const searchBlogsController = asyncHandler(async (req, res) => {
     const query = req.query.search?.trim();
     const page = req.query.page ? parseInt(req.query.page) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit) : 10;
-    const skip = (page - 1) * limit;
     if (!query || query.length < 2) {
         return res.status(400).json({ message: "Search query too short" });
     }
-    const search = query.toLowerCase();
-    // Match categories — safe because it's enum
-    const matchingCategories = Object.values(BLOGCATEGORY).filter((cat) => cat.toLowerCase().includes(search));
-    // OR conditions
-    const ORconditions = [
-        { title: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
-        { blogContent: { contains: search, mode: "insensitive" } },
-    ];
-    if (matchingCategories.length > 0) {
-        ORconditions.push({
-            category: { hasSome: matchingCategories },
-        });
-    }
-    // Fetch from DB
-    const blogs = await prisma.blog.findMany({
-        where: { OR: ORconditions },
-        include: {
-            author: {
-                select: {
-                    id: true,
-                    name: true,
-                    profilePicture: true,
-                }
-            },
-            _count: {
-                select: { comments: true, savedBlogs: true },
-            },
-        },
-        orderBy: [
-            { engagementScore: 'desc' },
-            { createdAt: 'desc' }
-        ],
-        skip,
-        take: limit
-    });
+    const skip = (page - 1) * limit;
+    const blogs = await prisma.$queryRawUnsafe(`
+    SELECT
+      b.*,
+      ts_rank(b.search_vector, plainto_tsquery('english', $1)) AS rank
+    FROM "Blog" b
+    WHERE b.search_vector @@ plainto_tsquery('english', $1)
+    ORDER BY
+      rank DESC,
+      b."engagementScore" DESC,
+      b."createdAt" DESC
+    LIMIT $2
+    OFFSET $3
+  `, query, limit, skip);
     return res.status(200).json({
         message: "Search results",
         query,
         totalResults: blogs.length,
-        data: blogs,
         pagination: {
             currentPage: page,
-            totalPages: Math.ceil(blogs.length / limit),
             limit,
         },
+        data: blogs,
     });
 });
