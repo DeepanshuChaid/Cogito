@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useSidebar } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";  
+import { cn } from "@/lib/utils"; 
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth.provider";
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
@@ -20,6 +21,29 @@ export default function Navbar() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  // State to track scroll
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const controlNavbar = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Scrolling down - hide
+        setIsVisible(false);
+      } else {
+        // Scrolling up - show
+        setIsVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", controlNavbar);
+    return () => window.removeEventListener("scroll", controlNavbar);
+  }, [lastScrollY]);
+  
+
   const logout = async () => {
     try {
       await API.post("/user/logout");
@@ -35,7 +59,19 @@ export default function Navbar() {
   }
 
   return (
-    <div className="flex justify-between items-center py-4 px-6 md:py-3 md:px-6 bg-[#0D0D0D] rounded-[2px] gap-2 md:gap-4">
+      <div 
+        className={cn(
+          // Sticky & Animation Logic
+          "sticky top-0 z-50 w-full transition-transform duration-300 ease-in-out",
+          "isVisible" ? "translate-y-0" : "-translate-y-full",
+
+          // Background & Borders
+          "bg-black-200 border-b border-white/10 px-1", 
+
+          // Original Layout Classes
+          "flex justify-between items-center py-4 px-6 md:py-3 md:px-6 gap-2 md:gap-4 rounded-[2px]"
+        )}
+      >
 
       <div className="flex gap-3">
         {/* Sidebar Toggle */}
