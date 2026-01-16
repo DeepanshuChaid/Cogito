@@ -57,14 +57,7 @@ src/
 │
 │   ├── blog/
 │   │   ├── api.ts               # REST calls
-│   │   ├── queries.ts           # useBlogs, useBlog
-│   │   ├── mutations.ts         # create, update, delete
-│   │   ├── transformers.ts      # engagement score logic
-│   │   └── types.ts
-│
-│   ├── comment/
-│   │   ├── api.ts
-│   │   ├── mutations.ts
+│   │   ├── queries.ts     tions.ts
 │   │   └── types.ts
 │
 │   ├── social/
