@@ -58,16 +58,7 @@ src/
 │   ├── blog/
 │   │   ├── api.ts               # REST calls
 │   │   ├── queries.ts     tions.ts
-│   │   └── types.ts
-│
-│   ├── social/
-│   │   ├── api.ts               # follow / unfollow
-│   │   ├── mutations.ts
-│   │   └── queries.ts
-│
-│   └── reaction/
-│       ├── api.ts
-│       └── mutations.ts
+│   │   └─ons.ts
 │
 ├── components/
 │   ├── ui/                      # PURE UI (shadcn-like)
