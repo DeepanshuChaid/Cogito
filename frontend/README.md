@@ -60,16 +60,7 @@ src/
 │   │   ├── queries.ts     tions.ts
 │   │   └─ons.ts
 │
-├── components/
-│   ├── ui/                      # PURE UI (shadcn-like)
-│   │   ├── Button.tsx
-│   │   ├── Modal.tsx
-│   │   └── Skeleton.tsx
-│
-│   ├── blog/
-│   │   ├── BlogCard.tsx
-│   │   ├── BlogHeader.tsx
-│   │   ├── BlogActions.tsx      # like / save / share
+├── componenthare
 │   │   └── BlogEditor.tsx
 │
 │   ├── comment/
@@ -77,17 +68,9 @@ src/
 │   │   └── CommentTree.tsx
 │
 │   ├── profile/
-│   │   ├── ProfileHeader.tsx
-│   │   └── FollowButton.tsx
-│
-│   └── layout/
-│       ├── Navbar.tsx
-│       └── Footer.tsx
-│
-├── lib/                         # APP INFRA
-│   ├── queryClient.ts
-│   ├── axios.ts
-│   ├── auth.ts
+
+│   ├── auth.
+ts
 │   ├── cloudinary.ts
 │   └── constants.ts
 │
