@@ -23,16 +23,7 @@ This is **scalable, and system-driven**.
 src/
 │
 ├── app/                         # ROogin/page.tsx
-│   │   └── register/page.tsx
-│
-│   ├── blog/
-│   │   ├── page.tsx             # Explore blogs
-│   │   ├── [slug]/
-│   │   │   ├── page.tsx         # Single blog
-│   │   │   ├── loading.tsx
-│   │   │   └── error.tsx
-│
-│   ├── write/
+│   │   └─
 │   │   └── page.tsx             # Create / edit blog
 │
 │   ├── profile/
