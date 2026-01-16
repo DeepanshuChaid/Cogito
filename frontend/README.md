@@ -72,16 +72,8 @@ src/
 │   ├── auth.
 ts
 │   ├── cloudinary.ts
-│   └── constants.ts
-│
-├── hooks/                       # REUSABLE LOGIC
-│   ├── useAuth.ts
-│   ├── useInfiniteBlogs.ts
-│   └── useIntersection.ts
-│
-├── utils/
-│   ├── formatDate.ts
-│   ├── slugify.ts
+│   ├── slugif
+y.ts
 │   └── debounce.ts
 │
 ├── types/
