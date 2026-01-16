@@ -13,7 +13,6 @@ This is **scalable, and system-driven**.
 
 - Mirror backend domain logic cleanly
 - Keep frontend maintainable as features grow
-- Scale to 500k+ users without refactors
 - Avoid over-engineering while staying future-proof
 
 ---

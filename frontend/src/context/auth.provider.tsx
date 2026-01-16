@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   useEffect(() => {
     if (!isPending && !user) {
-     // router.push("/login");
+     router.push("/login");
     }
   }, [isPending, user, router]);
 

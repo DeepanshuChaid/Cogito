@@ -43,7 +43,7 @@ export default function LoginPage() {
       router.push("/");
     },
     onError: (err: any) => {
-      const message = err?.response?.data?.message || "Something went wrong!";
+      const message = err?.response.data.message || "Something went wrong!";
       toast({
         title: "Error",
         description: message,
