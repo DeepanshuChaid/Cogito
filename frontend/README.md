@@ -22,15 +22,7 @@ This is **scalable, and system-driven**.
 ```txt
 src/
 │
-├── app/                         # ROUTING & PAGE COMPOSITION
-│   ├── layout.tsx               # Root layout
-│   ├── providers.tsx            # QueryClient, Auth context
-│   ├── globals.css
-│
-│   ├── page.tsx                 # Home feed (blogs)
-│
-│   ├── (auth)/                  # Route groups
-│   │   ├── login/page.tsx
+├── app/                         # ROogin/page.tsx
 │   │   └── register/page.tsx
 │
 │   ├── blog/
