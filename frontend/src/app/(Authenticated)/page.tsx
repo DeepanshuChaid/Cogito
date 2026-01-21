@@ -42,7 +42,7 @@ export default function Home() {
   
   return (
     <div>
-      vgvcdcdcdc
+      vg
     </div>
   )
 }
