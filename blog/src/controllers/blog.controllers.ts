@@ -70,7 +70,7 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
     },
   });
 
-  if (!blog) throw new Error("Blog not found");
+  if (!blog) throw new AppError("Blog not found");
 
   // Check if user has reacted to the blog
     const isReacted = await prisma.blogreaction.findUnique({
@@ -139,17 +139,17 @@ export const createBlogController = asyncHandler(async (req, res) => {
   const { title, description, blogContent, category } = req.body;
 
   if (category && !Object.values(BLOGCATEGORY).includes(category)) {
-    throw new Error("Invalid category");
+    throw new AppError("Invalid category");
   }
 
   const file = req.file;
 
-  if (!file) throw new Error("Please upload a file");
+  if (!file) throw new AppError("Please upload a file");
 
   const fileBuffer = getBuffer(file);
 
   if (!fileBuffer || !fileBuffer.content) {
-    throw new Error("Invalid file buffer or content");
+    throw new AppError("Invalid file buffer or content");
   }
 
   const cloud = await cloudinary.uploader.upload(fileBuffer.content, {
@@ -197,10 +197,10 @@ export const updateBlogController = asyncHandler(async (req, res) => {
     },
   });
 
-  if (!blog) throw new Error("Blog not found");
+  if (!blog) throw new AppError("Blog not found");
 
   if (blog.authorId !== req.user?.id) {
-    throw new Error("You are not authorized to update this blog");
+    throw new AppError("You are not authorized to update this blog");
   }
 
   let imageUrl = blog.image;
@@ -209,7 +209,7 @@ export const updateBlogController = asyncHandler(async (req, res) => {
     const fileBuffer = getBuffer(file);
 
     if (!fileBuffer || !fileBuffer.content)
-      throw new Error("Invalid file buffer or content");
+      throw new AppError("Invalid file buffer or content");
 
     const cloud = await cloudinary.uploader.upload(fileBuffer.content, {
       folder: "blogs",
@@ -260,10 +260,10 @@ export const deleteBlogController = asyncHandler(async (req, res) => {
     },
   });
 
-  if (!blog) throw new Error("Blog not found");
+  if (!blog) throw new AppError("Blog not found");
 
   if (blog.authorId !== req.user?.id) {
-    throw new Error("You are not authorized to delete this blog");
+    throw new AppError("You are not authorized to delete this blog");
   }
 
   await prisma.blog.delete({
@@ -309,7 +309,7 @@ export const getAllUserBlogsController = asyncHandler(async (req, res) => {
     },
   });
 
-  if (!blogs) throw new Error("Error getting Your blogs");
+  if (!blogs) throw new AppError("AppError getting Your blogs");
 
   await setCachedData(cacheKey, blogs);
 

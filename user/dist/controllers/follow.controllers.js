@@ -6,17 +6,17 @@ export const followUserController = asyncHandler(async (req, res) => {
     const targetName = req.params.name; // profile being visited
     const cacheKey = `other_user_data:${targetName}`;
     if (!followerId)
-        throw new Error("Unauthorized");
+        throw new AppError("Unauthorized");
     // 1. Fetch target user (minimal select for speed)
     const targetUser = await prisma.user.findUnique({
         where: { name: targetName },
         select: { id: true, name: true },
     });
     if (!targetUser)
-        throw new Error("User not found");
+        throw new AppError("User not found");
     // 2. Prevent self-follow
     if (targetUser.id === followerId) {
-        throw new Error("You cannot follow yourself");
+        throw new AppError("You cannot follow yourself");
     }
     // 3. Check if already following
     const existingFollow = await prisma.follow.findUnique({
