@@ -32,13 +32,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
-    origin: process.env.FRONTEND_URL,
+    origin: true,
     credentials: true,
 }));
-app.use("/api/blog", isAuthenticatedMiddleware, rateLimit({ capacity: 32, refillPerSecond: 0.8, }), blogRoutes);
+app.use("/api/blog", isAuthenticatedMiddleware, 
+// rateLimit({capacity: 32, refillPerSecond: 0.8,}),
+blogRoutes);
 app.use("/api/comment", rateLimit({ capacity: 10, refillPerSecond: 0.5, }), isAuthenticatedMiddleware, commentRoutes);
 app.use("/api/user", rateLimit({ capacity: 10, refillPerSecond: 0.4, }), isAuthenticatedMiddleware, userRoutes);
 app.use(errorHandler);
+app.set('trust proxy', 1); // Trust the first proxy (e.g., Nginx, Vercel)
 app.get("/", (req, res) => {
     res.send("hello world author service");
 });

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { asyncHandler } from "./asyncHandler.js";
 import { generateAccessToken } from "../utils/token.utils.js";
+import { AppError } from "./appError.js";
 
 declare module "express-serve-static-core" {
   interface Request {
@@ -11,26 +12,24 @@ declare module "express-serve-static-core" {
 
 export const isAuthenticatedMiddleware = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { accessToken, refreshToken } = req.cookies
+    const { accessToken, refreshToken } = req.cookies;
 
-    // Ensure req.user exists
-    if (!req.user) req.user = { id: "" };
-
-    if (req.user.id) return next();
+    // Already authenticated (set by previous middleware)
+    if (req.user?.id) return next();
 
     try {
-      // If access token exists
+      /* ---------------- ACCESS TOKEN ---------------- */
       if (accessToken) {
         const decoded = jwt.verify(
           accessToken,
           process.env.ACCESS_TOKEN_SECRET!
         ) as JwtPayload & { userId: string };
 
-        req.user.id = decoded.userId;
+        req.user = { id: decoded.userId };
         return next();
       }
 
-      // Try refresh token
+      /* ---------------- REFRESH TOKEN ---------------- */
       if (refreshToken) {
         const decodedRefresh = jwt.verify(
           refreshToken,
@@ -39,25 +38,24 @@ export const isAuthenticatedMiddleware = asyncHandler(
 
         const newAccessToken = generateAccessToken(decodedRefresh.userId);
 
-        res.cookie("accessToken", newAccessToken, { 
+        res.cookie("accessToken", newAccessToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
-          sameSite: 'strict',  // Critical: Prevents CSRF attacks
-          maxAge: 15 * 60 * 1000
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "none", // REQUIRED for cross-site cookies
+          maxAge: 15 * 60 * 1000,
         });
 
-        req.user.id = decodedRefresh.userId;
+        req.user = { id: decodedRefresh.userId };
         return next();
       }
 
-      throw new Error("Unauthorized. Please login.");
-    } catch (error) {
+      throw new AppError("Unauthenticated. Please login.", 401);
+    } catch (err) {
       res.clearCookie("accessToken");
       res.clearCookie("refreshToken");
-      throw new Error("Unauthorized. Please login.");
+
+      // Pass error to errorHandler (DO NOT rethrow generic Error)
+      throw new AppError("Unauthenticated. Please login.", 401);
     }
   }
 );
-
-
-

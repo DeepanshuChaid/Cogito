@@ -35,17 +35,19 @@ cloudinary.config({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true,
-}))
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  }),
+);
 
 app.use(
   "/api/blog",
   isAuthenticatedMiddleware,
-  rateLimit({capacity: 32, refillPerSecond: 0.8,}),
+  // rateLimit({capacity: 32, refillPerSecond: 0.8,}),
   blogRoutes
 );
 
@@ -63,6 +65,8 @@ app.use(
 );
 
 app.use(errorHandler);
+
+app.set('trust proxy', 1); // Trust the first proxy (e.g., Nginx, Vercel)
 
 app.get("/", (req, res) => {
   res.send("hello world author service");

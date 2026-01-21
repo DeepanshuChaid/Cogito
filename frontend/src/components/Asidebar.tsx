@@ -82,7 +82,7 @@ const Asidebar = () => {
           </SidebarHeader>
           <hr className="bg-black-50 border-black-50 rounded-[4px] my-6 border-1" />
   
-          <SidebarContent className="!p-0">
+          <SidebarContent className="!p-0 h-full">
             <SidebarGroup className="!p-0 gap-0">
               <SidebarGroupContent className="p-0 gap-[12px] flex flex-col">
                 <NavItem href="/">
