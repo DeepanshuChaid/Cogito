@@ -1,82 +1,48 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import API from "@/lib/API";
+import BlogAPI from "@/lib/BlogAPI";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/auth.provider";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { Loader } from "lucide-react";
 
 export default function Home() {
+
+  const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { user, isPending, error: authError } = useAuth();
-  const [localError, setLocalError] = useState<unknown | null>(null);
 
-  useEffect(() => {
-    if (!user && authError) {
-      toast({
-        title: "Authenticated",
-        description: authError.response.data.message,
-        variant: "destructive",
-      });
-    }
-  }, [user, authError]);
+  const {data, error, isPending} = useQuery({
+    queryKey: ["RecommendedBlogs"],
+    queryFn: async () => {
+      const res = await BlogAPI.get("/blog/recommended")
+      return res.data
+    },
+    staleTime: 100
+  })
 
-  const handleLogout = async () => {
-    try {
-      await API.post("/user/logout");
-      queryClient.clear();
-
-      toast({
-        title: "Logged out",
-      });
-    } catch (err) {
-      setLocalError(err);
-      toast({
-        title: "Logout failed",
-        description: JSON.stringify(err),
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (isPending) {
-    return (
-      <div className="flex w-full h-full items-center justify-center">
-        <p>Loading...</p>
+  if ( isPending ) {
+     return (
+      <div className="flex justify-center items-center h-full w-full">
+        <Loader className="animate-spin" />
       </div>
-    );
+     )
   }
 
-  if (authError || localError) {
-    const err = authError || localError;
-    return (
-      <div className="flex flex-col w-full gap-2">
-        <p>yOU Are LOGGED OUT NIGGa</p>
-        <Button onClick={handleLogout}>Logout</Button>
-        <Link href="/profile/Ergo25" className="underline">
-          Profile
-        </Link>
-      </div>
-    );
+  if ( error ) {
+    toast({
+      title: "Error",
+      description: "Something went wrong while fetching recommended blogs",
+      variant: "destructive"
+    })
   }
-
-  if (!user) {
-    return (
-      <div className="flex w-full h-full items-center justify-center">
-        <p>Not authenticated</p>
-      </div>
-    );
-  }
-
+  
   return (
-    <div className="flex flex-col gap-4">
-      <Button>Create Event</Button>
-      <Button onClick={handleLogout}>Logout</Button>
-      <Link href="/profile/Ergo25" className="underline">
-        Profile
-      </Link>
+    <div>
+      {JSON.stringify(data)}
     </div>
-  );
+  )
 }

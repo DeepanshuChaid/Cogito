@@ -87,7 +87,11 @@ app.get("/test/google", isAuthenticatedMiddleware, async (req, res) => {
   res.json(user);
 });
 
-app.listen(PORT, async () => {
+if (!PORT) {
+  throw new Error("PORT is not defined");
+}
+
+app.listen(PORT, "0.0.0.0", async () => {
   console.log("Server is running on port " + PORT);
   const data = await prisma.user.findMany();
   console.log(data);

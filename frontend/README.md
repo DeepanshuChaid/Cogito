@@ -15,5 +15,3 @@ This is **scalable, and system-driven**.
 - Keep frontend maintainable as features grow
 - Avoid over-engineering while staying future-proof
 
-
-i am sorry my nigga my terminal is on drugs its working and not working at the same time
