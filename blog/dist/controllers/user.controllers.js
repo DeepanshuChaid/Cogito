@@ -8,12 +8,12 @@ export const saveBlogController = asyncHandler(async (req, res) => {
         return res.status(401).json({ message: "Unauthorized" });
     const blog = await prisma.blog.findUnique({ where: { id: blogId } });
     if (!blog)
-        throw new Error("Blog not found");
+        throw new AppError("Blog not found");
     const alreadySaved = await prisma.savedblogs.findUnique({
         where: { userId_blogId: { userId, blogId } },
     });
     if (alreadySaved)
-        throw new Error("Blog already saved");
+        throw new AppError("Blog already saved");
     // Save and update score
     const savedBlog = await prisma.$transaction(async (tx) => {
         const saved = await tx.savedblogs.create({
@@ -45,7 +45,7 @@ export const deleteSavedBlogController = asyncHandler(async (req, res) => {
         return res.status(401).json({ message: "Unauthorized" });
     const blog = await prisma.blog.findUnique({ where: { id: blogId } });
     if (!blog)
-        throw new Error("Blog not found");
+        throw new AppError("Blog not found");
     // Delete and update score
     const savedBlog = await prisma.$transaction(async (tx) => {
         const deleted = await tx.savedblogs.delete({
@@ -65,7 +65,7 @@ export const deleteSavedBlogController = asyncHandler(async (req, res) => {
         return deleted;
     });
     if (!savedBlog)
-        throw new Error("Blog not found in saved blogs");
+        throw new AppError("Blog not found in saved blogs");
     return res.status(200).json({
         message: "Blog removed from saved blogs successfully",
         data: savedBlog,
