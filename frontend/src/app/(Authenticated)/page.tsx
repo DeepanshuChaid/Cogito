@@ -42,7 +42,7 @@ export default function Home() {
   
   return (
     <div>
-      {JSON.stringify(data)}
+      vgvghjvgh
     </div>
   )
 }
