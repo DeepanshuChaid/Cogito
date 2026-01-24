@@ -80,7 +80,8 @@ export const createCommentController = asyncHandler(async (req, res) => {
 export const deleteCommentController = asyncHandler(async (req, res) => {
   const blogId = req.params.blogId;
   const commentId = req.params.id;
-  const userId = req.user?.id;
+  if (!req.user) throw new AppError("Unauthorized", 401);
+  const userId = req.user.id;
 
   const blog = await prisma.blog.findUnique({ where: { id: blogId } });
   if (!blog) throw new AppError("Blog not found");
@@ -123,7 +124,8 @@ export const deleteCommentController = asyncHandler(async (req, res) => {
 export const updateCommentController = asyncHandler(async (req, res) => {
   const blogId = req.params.blogId;
   const commentId = req.params.id;
-  const userId = req.user?.id;
+  if (!req.user) throw new AppError("Unauthorized", 401);
+  const userId = req.user.id;
   const { comment } = req.body;
 
   const blog = await prisma.blog.findUnique({ where: { id: blogId } });
@@ -160,7 +162,8 @@ export const updateCommentController = asyncHandler(async (req, res) => {
 //  *************************** //
 export const getCommentsController = asyncHandler(async (req, res) => {
   const blogId = req.params.blogId;
-  const userId = req.user?.id;
+  if (!req.user) throw new AppError("Unauthorized", 401);
+  const userId = req.user.id;
 
   const page = req.query.page ? parseInt(req.query.page as string) : 1;
   const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
@@ -196,14 +199,15 @@ export const getCommentsController = asyncHandler(async (req, res) => {
 
   if (!comments) throw new AppError("No comments found");
 
-  comments.forEach((e) => {
-    e.userId === userId ? (e.role = "author") : (e.role = "user");
-  });
+  const commentsWithRole = comments.map((e) => ({
+    ...e,
+    role: e.userId === userId ? "author" : "user",
+  }));
 
-  await setCachedData(cacheKey, comments);
+  await setCachedData(cacheKey, commentsWithRole);
 
   return res.status(200).json({
     message: "Comments fetched successfully",
-    data: comments,
+    data: commentsWithRole,
   });
 });
