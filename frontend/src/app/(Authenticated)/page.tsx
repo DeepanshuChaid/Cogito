@@ -11,38 +11,33 @@ import { useQuery } from "@tanstack/react-query";
 import { Loader } from "lucide-react";
 
 export default function Home() {
-
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const {data, error, isPending} = useQuery({
+  const { data, error, isPending, isError } = useQuery({
     queryKey: ["RecommendedBlogs"],
     queryFn: async () => {
-      const res = await BlogAPI.get("/blog/recommended")
-      return res.data
+      const res = await BlogAPI.get("/blog/recommended");
+      return res.data;
     },
-    staleTime: 100
-  })
+    staleTime: 100,
+  });
 
-  if ( isPending ) {
-     return (
+  if (isPending) {
+    return (
       <div className="flex justify-center items-center h-full w-full">
         <Loader className="animate-spin" />
       </div>
-     )
+    );
   }
 
-  if ( error ) {
+  if (isError) {
     toast({
       title: "Error",
       description: "Something went wrong while fetching recommended blogs",
-      variant: "destructive"
-    })
+      variant: "destructive",
+    });
   }
-  
-  return (
-    <div>
-      
-    </div>
-  )
+
+  return <div>{JSON.stringify(data)}</div>;
 }
