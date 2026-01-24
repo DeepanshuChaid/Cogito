@@ -13,7 +13,8 @@ import { redisClient } from "../server.js";
 // CREATE COMMENTS CONTROLLER
 // *************************** //
 export const createCommentController = asyncHandler(async (req, res) => {
-  const userId = req.user?.id;
+  if (!req.user) throw new AppError("Unauthorized", 401);
+  const userId = req.user.id;
   const blogId = req.params.blogId;
 
   const { comment, parentId } = req.body;
