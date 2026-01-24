@@ -4,7 +4,6 @@ import { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
 import { redisClient } from "../server.js";
 import { invalidateCache } from "../utils/redis.utils.js";
-import { AppError } from "../middlewares/appError.js"
 
 // *************************** //
 // LIKE BLOG CONTROLLER
@@ -108,7 +107,9 @@ export const likeBlogController = asyncHandler(async (req, res) => {
 // *************************** //
 export const dislikeBlogController = asyncHandler(async (req, res) => {
   const blogId = req.params.id;
-  const userId = req.user.id;
+  const userId = req.user?.id;
+
+  if (!userId) throw new AppError("Unauthorized", 404)
 
   const existingReaction = await prisma.blogreaction.findUnique({
     where: { userId_blogId: { userId, blogId } },

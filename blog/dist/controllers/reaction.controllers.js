@@ -91,7 +91,9 @@ export const likeBlogController = asyncHandler(async (req, res) => {
 // *************************** //
 export const dislikeBlogController = asyncHandler(async (req, res) => {
     const blogId = req.params.id;
-    const userId = req.user.id;
+    const userId = req.user?.id;
+    if (!userId)
+        throw new AppError("Unauthorized", 404);
     const existingReaction = await prisma.blogreaction.findUnique({
         where: { userId_blogId: { userId, blogId } },
     });

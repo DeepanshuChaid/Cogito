@@ -10,8 +10,11 @@ import BLOGCATEGORY from "../enum/blogCategory.enum.js";
 // GET BLOG BY ID CONTROLLER
 // *************************** //
 export const getBlogByIdController = asyncHandler(async (req, res) => {
+    if (!req.user) {
+        throw new AppError("Unauthorized", 401);
+    }
+    const userId = req.user.id;
     const blogId = req.params.id;
-    const userId = req.user?.id;
     const cacheKey = `blog:${blogId}`;
     const viewKey = `blog:${blogId}:user:${userId}`;
     // 1) Check cache first (fastest path)
@@ -64,8 +67,6 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
             }
         },
     });
-    if (isReacted)
-        blog._reaction = isReacted;
     const isSaved = await prisma.savedblogs.findUnique({
         where: {
             userId_blogId: {
@@ -74,8 +75,6 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
             }
         }
     });
-    if (isSaved)
-        blog._saved = true;
     // Cache it
     await redisClient.set(cacheKey, JSON.stringify(blog), { EX: 18000 });
     // 3) Unique view logic
@@ -98,10 +97,17 @@ export const getBlogByIdController = asyncHandler(async (req, res) => {
         await redisClient.set(cacheKey, JSON.stringify(blog), { EX: 18000 });
     }
     const role = blog.authorId === userId ? "author" : "user";
+    // Add reaction and saved status to the blog object  
+    const reaction = isReacted ?? null;
+    const saved = Boolean(isSaved);
     return res.status(200).json({
         cached: false,
         message: "Blog fetched successfully",
-        data: blog,
+        data: {
+            ...blog,
+            reaction,
+            saved
+        },
         role,
     });
 });

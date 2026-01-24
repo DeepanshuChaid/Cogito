@@ -2,6 +2,7 @@ import { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
 import BLOGCATEGORY from "../enum/blogCategory.enum.js";
 import { redisClient } from "../server.js";
+import { AppError } from "../middlewares/appError.js";
 // *************************** //
 // GET RECOMMENDED BLOGS CONTROLLER (IMPROVED)
 // *************************** //
@@ -109,28 +110,34 @@ export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
 // SEARCH BLOGS CONTROLLER (FIXED)
 // *************************** //
 export const searchBlogsController = asyncHandler(async (req, res) => {
-    const query = req.query.search?.trim();
-    const page = req.query.page ? parseInt(req.query.page) : 1;
-    const limit = req.query.limit ? parseInt(req.query.limit) : 10;
-    const skip = (page - 1) * limit;
-    if (!query || query.length < 2) {
-        return res.status(400).json({ message: "Search query too short" });
+    const searchQuery = typeof req.query.search === "string"
+        ? req.query.search.trim()
+        : "";
+    const page = typeof req.query.page === "string"
+        ? parseInt(req.query.page, 10)
+        : 1;
+    const limit = typeof req.query.limit === "string"
+        ? parseInt(req.query.limit, 10)
+        : 10;
+    if (!searchQuery) {
+        throw new AppError("Search query too short", 400);
     }
-    const search = query.toLowerCase();
-    // Match categories — safe because it's enum
+    const skip = (page - 1) * limit;
+    const search = searchQuery.toLowerCase();
+    // Match enum categories
     const matchingCategories = Object.values(BLOGCATEGORY).filter((cat) => cat.toLowerCase().includes(search));
-    // OR conditions
+    // OR conditions (Prisma-safe)
     const ORconditions = [
         { title: { contains: search, mode: "insensitive" } },
         { description: { contains: search, mode: "insensitive" } },
         { blogContent: { contains: search, mode: "insensitive" } },
     ];
+    // category is ENUM, not array → use equals / in
     if (matchingCategories.length > 0) {
         ORconditions.push({
-            category: { hasSome: matchingCategories },
+            category: { in: matchingCategories },
         });
     }
-    // Fetch from DB
     const blogs = await prisma.blog.findMany({
         where: { OR: ORconditions },
         include: {
@@ -139,22 +146,22 @@ export const searchBlogsController = asyncHandler(async (req, res) => {
                     id: true,
                     name: true,
                     profilePicture: true,
-                }
+                },
             },
             _count: {
                 select: { comments: true, savedBlogs: true },
             },
         },
         orderBy: [
-            { engagementScore: 'desc' },
-            { createdAt: 'desc' }
+            { engagementScore: "desc" },
+            { createdAt: "desc" },
         ],
         skip,
-        take: limit
+        take: limit,
     });
     return res.status(200).json({
         message: "Search results",
-        query,
+        query: searchQuery,
         totalResults: blogs.length,
         data: blogs,
         pagination: {
