@@ -4,6 +4,7 @@ import { v2 as cloudinary } from "cloudinary";
 import prisma from "../prisma.js";
 import { redisClient } from "../server.js";
 import { getCachedData, invalidateCache, setCachedData, } from "../utils/redis.utils.js";
+import { AppError } from "../middlewares/appError.js";
 import BLOGCATEGORY from "../enum/blogCategory.enum.js";
 // *************************** //
 // GET BLOG BY ID CONTROLLER

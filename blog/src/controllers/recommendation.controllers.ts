@@ -3,6 +3,7 @@ import prisma from "../prisma.js";
 import { getCachedData, setCachedData } from "../utils/redis.utils.js";
 import BLOGCATEGORY from "../enum/blogCategory.enum.js";
 import { redisClient } from "../server.js";
+import { AppError } from "../middlewares/appError.js"
 
 
 // *************************** //

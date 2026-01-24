@@ -6,6 +6,7 @@ import {
   setCachedData,
   deleteCommentCaches,
 } from "../utils/redis.utils.js";
+import { AppError } from "../middlewares/appError.js"
 import { redisClient } from "../server.js";
 
 // *************************** //

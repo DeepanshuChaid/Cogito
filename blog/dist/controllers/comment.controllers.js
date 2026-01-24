@@ -1,6 +1,7 @@
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import prisma from "../prisma.js";
 import { invalidateCache, getCachedData, setCachedData, deleteCommentCaches, } from "../utils/redis.utils.js";
+import { AppError } from "../middlewares/appError.js";
 import { redisClient } from "../server.js";
 // *************************** //
 // CREATE COMMENTS CONTROLLER
