@@ -1,55 +1,30 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import BlogAPI from "@/lib/BlogAPI";
 import { useEffect, useState } from "react";
-import { Loader } from "lucide-react";
+import Link from "next/link";
 import { useAuth } from "@/context/auth.provider";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
-
-// Replace this with your actual Microservice URL (e.g., http://localhost:5000)
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+import { useQuery } from "@tanstack/react-query";
+import { Loader } from "lucide-react";
+import API from "@/lib/API";
 
 export default function Home() {
   const { user } = useAuth();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/blog/recommended`, {
-          method: "GET",
-          headers: {
-            // CRITICAL: Tells the server you want JSON, not a Next.js page
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-          },
-          // CRITICAL: Sends cookies/session tokens to your microservice
-          credentials: "include", 
-        });
+  const { data, error, isPending } = useQuery({
+    queryKey: ["RecommendedBlogs"],
+    queryFn: async () => {
+      const res = await API.get("/blog/recommended");
+      return res.data;
+    },
+    staleTime: 100,
+  });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        setData(result);
-      } catch (err) {
-        const message = JSON.stringify(err)
-        toast({
-          title: "Error",
-          description: message,
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBlogs();
-  }, []); // Runs once on mount
-
-  if (loading) {
+  if (isPending) {
     return (
       <div className="flex justify-center items-center h-full w-full">
         <Loader className="animate-spin" />
@@ -57,12 +32,13 @@ export default function Home() {
     );
   }
 
-  return (
-    <div className="p-4">
-      <h1 className="text-xl mb-4">Recommended Blogs</h1>
-      <pre className="bg-black-100 p-4 rounded-lg overflow-auto">
-        {JSON.stringify(data, null, 2)}
-      </pre>
-    </div>
-  );
+  if (error) {
+    toast({
+      title: "Error",
+      description: "Something went wrong while fetching recommended blogs",
+      variant: "destructive",
+    });
+  }
+
+  return <div className="w-full h-full">{JSON.stringify(data)}</div>;
 }

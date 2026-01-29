@@ -12,6 +12,7 @@ import { v2 as cloudinary } from "cloudinary";
 import { createClient } from "redis";
 import followRoutes from "./routes/follow.routes.js";
 import notificationRoutes from "./routes/notifications.routes.js";
+import blogRoutes from "./routes/blog.routes.js";
 
 export const redisClient = createClient({
   url: process.env.REDIS_URL_UPSTASH,
@@ -71,6 +72,9 @@ app.use(passport.session());
 app.use("/api/user", userRoutes);
 app.use("/api/user", isAuthenticatedMiddleware, followRoutes);
 app.use("/api/notification", isAuthenticatedMiddleware, notificationRoutes);
+
+// de pyar ne badnam kar diya mujhe daru ka gulam kar diya mujhe na ji raha na me mar saka
+app.use("/api/blog", blogRoutes)
 
 app.use(errorHandler);
 
