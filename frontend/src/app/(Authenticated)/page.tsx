@@ -40,5 +40,18 @@ export default function Home() {
     });
   }
 
-  return <div className="w-full h-full">{JSON.stringify(data)}</div>;
+  return (
+      <div className="flex flex-col items-center p-0 gap-[3px] w-full h-full bg-[#1F1F1F] border border-[rgba(255,255,255,0.1)] rounded-xl">
+        {data?.data?.map((blog: any, index) => {
+          return (
+              <div key={index} className="flex flex-row items-center py-5 px-4 gap-3 bg-[#131313] w-full">
+                {blog.title}
+              </div>)
+          })}
+        
+        <div class="flex flex-row items-center py-5 px-4 gap-3 bg-[#131313] w-full">
+          vfvf
+        </div>
+    </div>
+  )
 }
