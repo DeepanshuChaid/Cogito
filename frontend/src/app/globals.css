@@ -149,7 +149,7 @@
 
 @layer base {
   * {
-    @apply border-border border border-grey-50 outline-ring/50;
+    @apply border-border  outline-ring/50;
   } 
   body {
     @apply text-white-400 overflow-x-hidden;

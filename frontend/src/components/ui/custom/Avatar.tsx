@@ -36,7 +36,7 @@ export default function UserAvatar({
         "min-[500px]:h-7 min-[500px]:w-7",
         // >802px → 32px
         "min-[802px]:h-8 min-[802px]:w-8",
-        "rounded-2xl border shadow-sm transition-transform duration-200 hover:scale-105",
+        "",
         className
       )}
     >
