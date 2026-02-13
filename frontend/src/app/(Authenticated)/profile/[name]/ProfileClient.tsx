@@ -15,16 +15,16 @@ export default function ProfilePage() {
       return res.data.user;
     },
     enabled: !!name,
-    onSucces: () => toast({
-      title: "Success",
-      description: "Profile fetched successfully",
-      variant: "success"
-    }),
-    onError: (err: any) => toast({
-        title: "Error",
-        description: err?.response?.data?.message || "Something went wrong!",
-        variant: "destructive"
-      })
+    // onSucces: () => toast({
+    //   title: "Success",
+    //   description: "Profile fetched successfully",
+    //   variant: "success"
+    // }),
+    // onError: (err: any) => toast({
+    //     title: "Error",
+    //     description: err?.response?.data?.message || "Something went wrong!",
+    //     variant: "destructive"
+    //   })
   });
 
   if (isLoading) return <div className="h-screen grid place-items-center">Loading…</div>;

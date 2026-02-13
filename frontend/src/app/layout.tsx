@@ -21,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${manrope.variable} font-sans antialiased bg-[#0A0A0A] text-white-400 overflow-x-hidden !w-full !h-full`}>
+      <body className={`${manrope.variable} font-sans antialiased bg-[#0A0A0A] text-white-400 overflow-x-hidden w-screen h-screen`}>
         <Providers>
           <Toaster />
           {children}
@@ -30,4 +30,8 @@ export default function RootLayout({
     </html>
   );
 }
+
+
+
+
 

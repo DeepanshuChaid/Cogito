@@ -149,7 +149,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border border border-grey-50 outline-ring/50;
   } 
   body {
     @apply text-white-400 overflow-x-hidden;
@@ -230,13 +230,4 @@
   font-size: 48px;
   line-height: 118.75%;
   letter-spacing: -0.03em;
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
 }

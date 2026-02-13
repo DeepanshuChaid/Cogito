@@ -64,7 +64,7 @@ export default function Navbar() {
         className={cn(
           // Sticky & Animation Logic
           "sticky top-0 z-50 w-full transition-transform duration-300 ease-in-out",
-          "isVisible" ? "translate-y-0" : "-translate-y-full",
+          isVisible ? "translate-y-0" : "-translate-y-full",
 
           // Background & Borders
           "bg-black-200 border-b border-white/10 px-1 md:border-none", 

@@ -16,12 +16,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Asidebar />
 
           {/* 2. This column holds Navbar + Content */}
-          <div className="flex flex-1 flex-col min-w-0 h-full">
+          <div className="flex flex-1 flex-col min-w-0 h-screen overflow-hidden">
             <Navbar />
 
             {/* 3. This is the wrapper for the 'Rectangle'. 
                    We use overflow-hidden here so the rectangle itself can scroll */}
-            <main className="flex-1 min-h-0 p-0 md:p-2 overflow-hidden !max-h-full">
+            <main className="flex-1 min-h-0 p-0 md:p-2 h-full overflow-hidden">
 
               {/* 4. THE RECTANGLE: 
                      h-full + overflow-y-auto makes the scrollbar appear INSIDE the black box */}
