@@ -20,7 +20,7 @@ export const saveBlogController = asyncHandler(async (req, res) => {
   if (alreadySaved) throw new AppError("Blog already saved");
 
   // Save and update score
-  const savedBlog = await prisma.$transaction(async (tx) => {
+  const savedBlog = await prisma.$transaction(async (tx: any) => {
     const saved = await tx.savedblogs.create({
       data: {
         user: { connect: { id: userId } },
@@ -57,7 +57,7 @@ export const deleteSavedBlogController = asyncHandler(async (req, res) => {
   if (!blog) throw new AppError("Blog not found");
 
   // Delete and update score
-  const savedBlog = await prisma.$transaction(async (tx) => {
+  const savedBlog = await prisma.$transaction(async (tx: any) => {
     const deleted = await tx.savedblogs.delete({
       where: {
         userId_blogId: {

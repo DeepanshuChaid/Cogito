@@ -61,7 +61,7 @@ export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
   });
 
   // Apply time decay and calculate final scores
-  const blogsWithScore = blogs.map(blog => {
+  const blogsWithScore = blogs.map((blog: any, i: number) => {
     const baseScore = blog.engagementScore || 0;
 
     // Time decay calculation
@@ -91,7 +91,7 @@ export const getRecommendedBlogsController = asyncHandler(async (req, res) => {
   });
 
   // Sort by final score
-  blogsWithScore.sort((a, b) => b.score - a.score);
+  blogsWithScore.sort((a: any, b: any) => b.score - a.score);
 
   // Paginate AFTER sorting
   const paginatedBlogs = blogsWithScore.slice(skip, skip + limit);

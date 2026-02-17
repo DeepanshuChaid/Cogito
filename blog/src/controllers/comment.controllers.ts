@@ -27,7 +27,7 @@ export const createCommentController = asyncHandler(async (req, res) => {
   if (!blog) throw new AppError("Blog not found");
 
   // Create comment and update score in transaction
-  const newComment = await prisma.$transaction(async (tx) => {
+  const newComment = await prisma.$transaction(async (tx:any) => {
     const response = await tx.comments.create({
       data: {
         comment,
@@ -199,7 +199,7 @@ export const getCommentsController = asyncHandler(async (req, res) => {
 
   if (!comments) throw new AppError("No comments found");
 
-  const commentsWithRole = comments.map((e) => ({
+  const commentsWithRole = comments.map((e : any, i: number) => ({
     ...e,
     role: e.userId === userId ? "author" : "user",
   }));
